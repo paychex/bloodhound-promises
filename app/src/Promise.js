@@ -34,28 +34,17 @@
              * @member {String} Bloodhound.UncaughtRejection#reason
              */
 
-            var _stack = '',
-                _stackCreated = false;
+            this.name = 'Uncaught Promise Rejection';
+            this.stack = 'No stack';
+            this.promise = promise;
 
             if (messageOrError instanceof Error) {
-                _stack = '\n\n' + messageOrError.stack;
+                this.stack = messageOrError.stack;
                 this.causedBy = messageOrError;
                 this.message = messageOrError.message;
             }
 
-            this.name = 'Uncaught Promise Rejection';
             this.message = this.message || this.name;
-
-            Object.defineProperty(this, 'stack', {
-                enumerable: true,
-                get: function() {
-                    if (!_stackCreated) {
-                        _stackCreated = true;
-                        _stack = getStackTrace(promise) + _stack;
-                    }
-                    return _stack;
-                }
-            });
 
         }
 
@@ -67,7 +56,6 @@
 
         var async,
             errorRate = 0,
-            collectors = [],
             usePrettyStacks = false,
             unhandledRejectionHandlers = [],
 
@@ -79,47 +67,13 @@
 
             noop = function noop() {},
 
-            doneNotCalled = function doneNotCalled(e) {
+            doneNotCalled = function doneNotCalled() {
                 /* jshint -W117 */
                 if (!!console) {
                     (console.warn || console.info || console.log)(
                         'Call done() at the end of a promise chain.'
                     );
                 }
-            },
-
-            getStackTrace = function getStack(promise) {
-
-                var target,
-                    sep = '',
-                    name = '',
-                    result = '',
-                    rejects = [],
-                    childIsRejected = function childIsRejected(child) {
-                        return child._state === States.REJECTED;
-                    },
-                    findLowestReject = function findLowestRejectedChild(depth, target) {
-                        rejects[depth] = (rejects[depth] || []).concat(target._children.filter(childIsRejected));
-                        target._children.forEach(findLowestReject.bind(null, depth + 1));
-                    };
-
-                findLowestReject(0, promise);
-                while (!!rejects.length && !target) {
-                    var targets = rejects.pop();
-                    target = targets.shift();
-                }
-
-                target = target || promise;
-
-                while (!!target) {
-                    name = target.toString();
-                    result = name + sep + result;
-                    target = target._parent;
-                    sep = '\n at ';
-                }
-
-                return ' at ' + result;
-
             },
 
             err = function err(promise, reason) {
@@ -143,28 +97,6 @@
                 }
             },
 
-            Cycle = {
-
-                inChildren : function inChildren(toCheck, promise) {
-                    return promise._children.indexOf(toCheck) !== -1 ||
-                        promise._children.some(inChildren.bind(null, toCheck));
-                },
-
-                inParents : function inParents(toCheck, promise) {
-                    return !!promise._parent && (
-                        promise._parent === toCheck || inParents(toCheck, promise._parent)
-                    );
-                },
-
-                wouldExist : function wouldExist(toCheck, promise) {
-                    return toCheck === promise ||
-                        Cycle.inParents(toCheck, promise) ||
-                        Cycle.inParents(promise._parent, toCheck) ||
-                        Cycle.inChildren(toCheck, promise);
-                }
-
-            },
-
             RESOLVER = function RESOLVER(promise, x) {
 
                 // NOTE: logic is based on the Promises/A+ spec
@@ -173,10 +105,6 @@
                 if (promise === x) {
                     settle(promise, States.REJECTED, new TypeError());
                 } else if (x instanceof Promise) {
-
-                    if (Cycle.inParents(promise, x)) {
-                        throw new Error('Cycle would be created in promise chain.');
-                    }
 
                     if (x._state === States.PENDING) {
                         x.then(function (val) {
@@ -189,8 +117,6 @@
                     } else {
                         RESOLVER(promise, x._data);
                     }
-
-                    chain(promise, x);
 
                 } else if (x instanceof Error) {
                     settle(promise, States.REJECTED, x);
@@ -232,142 +158,12 @@
 
             },
 
-            Timing = {
-
-                enabled : true,
-                useSaneTimings : false,
-                epochMethod : Date.now ? Date.now : function getTime() {
-                    return new Date().getTime();
-                },
-
-                getUTCEpochTime : function getUTCEpochTime() {
-                    return Timing.epochMethod();
-                },
-
-                anyActiveTracks : function anyActiveTracks(node) {
-                    return node._isPassive === false || node._children.some(Timing.anyActiveTracks);
-                },
-
-                addChildren : function addChildren(timing, children) {
-                    (children || []).forEach(function iter(child) {
-                        if (child.isSettled()) {
-                            timing.children.push(Timing.getTimingTree(child));
-                        }
-                    });
-                },
-
-                getTimingTree : function getTimingTree(node) {
-
-                    var timing = {
-                        name: node._trackName || 'anonymous',
-                        data: node._data,
-                        start: node._start,
-                        stop: node._stop,
-                        duration: node._duration,
-                        children: []
-                    };
-
-                    Timing.addChildren(timing, node._children);
-
-                    return timing;
-
-                },
-
-                getTimingData : function getTimingData(promise) {
-
-                    var tree,
-                        root = promise,
-                        ancestor = root._parent;
-
-                    while (!!ancestor) {
-                        root = ancestor;
-                        ancestor = root._parent;
-                    }
-
-                    if (!root.isSettled() || !Timing.anyActiveTracks(root)) {
-                        return;
-                    }
-
-                    tree = Timing.getTimingTree(root);
-
-                    if (Timing.useSaneTimings) {
-                        Timing.sanitize(tree);
-                    }
-
-                    return tree;
-
-                },
-
-                getMinStart : function getMinStartTime(timing) {
-                    return [timing.start].concat(timing.children.map(Timing.getMinStart)).sort().shift();
-                },
-
-                getMaxStop : function getMaxStopTime(timing) {
-                    return [timing.stop].concat(timing.children.map(Timing.getMaxStop)).sort().pop();
-                },
-
-                sanitize : function sanitize(timing) {
-                    timing.start = Timing.getMinStart(timing);
-                    timing.stop = Timing.getMaxStop(timing);
-                    timing.duration = Math.max(0, timing.stop - timing.start);
-                    timing.children.forEach(sanitize);
-                },
-
-                persistTimings : function persistTimings() {
-                    if (!Timing.enabled) {
-                        return;
-                    }
-                    var timing = Timing.getTimingData(this);
-                    if (!!timing) {
-                        collectors.forEach(function persist(collector) {
-                            collector.collect(timing);
-                        });
-                    }
-                }
-
-            },
-
-            chain = function chain(parent, child) {
-
-                var root = child,
-                    ancestor = root._parent;
-
-                while (!!ancestor) {
-                    if (ancestor === parent) {
-                        return;
-                    }
-                    root = ancestor;
-                    ancestor = root._parent;
-                }
-
-                if (Cycle.wouldExist(parent, root)) {
-                    return;
-                }
-
-                root._parent = parent;
-                parent._children.push(root);
-
-            },
-
-            setTrackNameFromMethod = function setTrackNameFromMethod(promise, callback) {
-                if (!promise._trackName) {
-                    // if the callback is not anonymous, we use the function
-                    // name as the passively tracked name so any persisted
-                    // timing data will be more easily understood
-                    var cbName = callback.toString().match(/function\s(\w+)/);
-                    if (cbName instanceof Array) {
-                        promise.trackAs(cbName.pop(), true);
-                    }
-                }
-            },
-
             wrapCallback = function wrapCallback(child, callback, propagate, reject) {
                 // used by promise.then() to wrap the success and failure callbacks
                 // so any values returned from those methods can be propagated correctly
                 // according to the Promise/A+ specification
                 return function parentSettled(value) {
                     if (typeof callback === 'function') {
-                        setTrackNameFromMethod(child, callback);
                         try {
                             RESOLVER(child, callback(value));
                         } catch (err) {
@@ -405,17 +201,21 @@
 
                     promise._data = data;
                     promise._state = state;
-                    promise._stop = Timing.getUTCEpochTime();
-                    promise._duration = promise._stop - promise._start;
 
-                    var callbacks = state === States.RESOLVED ?
-                        promise._successes : promise._failures;
+                    var callback,
+                        callbacks;
 
-                    callbacks.forEach(function iter(callback) {
-                        async(function doCallback() {
-                            callback(promise._data);
-                        });
-                    });
+                    if (state === States.RESOLVED) {
+                        callbacks = promise._successes;
+                        promise._failures.length = 0;
+                    } else {
+                        callbacks = promise._failures;
+                        promise._successes.length = 0;
+                    }
+
+                    while (callback = callbacks.shift()) {
+                        async(callback.bind(null, promise._data));
+                    }
 
                 }
             };
@@ -483,9 +283,7 @@
             promise._notify = notify;
             promise._reject = reject;
             promise._resolve = resolve;
-            promise._start = Timing.getUTCEpochTime();
             promise._parent = null;
-            promise._children = [];
             promise._notifies = [];
             promise._successes = wrapPush(promise, [], States.RESOLVED);
             promise._failures = wrapPush(promise, [], States.REJECTED);
@@ -508,19 +306,13 @@
                 // empty execution context before making
                 // our check
                 setTimeout(function warnIfNecessary() {
-                    if (!promise._children.length && !promise._doneCalled) {
+                    if (!promise._doneCalled) {
                         doneNotCalled({promise: promise});
                     }
-                });
+                }, 1000);
             }
 
         }
-
-        Promise.prototype.toString = function toString() {
-            return this._trackName ?
-                (!this._isPassive ? 'trackAs: ' : 'function: ') + this._trackName :
-                'constructor: Promise';
-        };
 
         /**
          * Registers optional success, failure, and notification callbacks
@@ -586,8 +378,6 @@
             if (typeof notify === 'function') {
                 parent._notifies.push(notify);
             }
-
-            chain(parent, child);
 
             return child;
 
@@ -801,70 +591,6 @@
         };
 
         /**
-         * Tells Bloodhound to track this promise with the specified
-         * name. If someone calls `done()` on a promise chain that
-         * includes this promise, all captured timing data will be
-         * persisted to any registered collectors.
-         *
-         * If you specify `passive` as true, then the timing data
-         * will only be persisted if another promise in the tree is
-         * being tracked and is *not* passive. See the examples for
-         * details.
-         * @function Bloodhound.Promise#trackAs
-         * @param name {String} The name to associate with this promise;
-         *  the name will appear in timing data passed to collectors.
-         * @param [passive] {Boolean} Whether or not the promise should
-         *  be passively tracked. Default is `false`. If `true`, then
-         *  timing data will not be persisted to collectors when `done()`
-         *  is called unless some other promise in the chain was being
-         *  actively tracked.
-         * @returns {Promise}
-         * @example
-         * function doLogIn(username, password) {
-         *   return new Promise(function(resolve, reject) {
-         *     try {
-         *       // pretend to make a remote call:
-         *       Promise.delay(150, [username, password]).then(resolve, reject);
-         *     } catch (err) {
-         *       reject(err);
-         *     }
-         *   }).trackAs('user login', true);
-         *
-         *   // by tracking this, we ensure it appears in timing
-         *   // output with the name we want ('user login'); we
-         *   // can use the timing data in reports to ensure our
-         *   // login process is not taking too long
-         *
-         *   // however, because we specified `true` for the passive
-         *   // parameter, we will not persist login timing data to
-         *   // our collectors *unless* the promise is part of a larger
-         *   // actively tracked promise tree
-         * }
-         *
-         * // let's pretend we need to perform a bunch of concurrent
-         * // operations, one of which includes logging in; by actively
-         * // tracking the combined promise and calling `done()`, we
-         * // will persist all timing data to any registered collectors;
-         * // and because doLogIn() returned a passively tracked promise,
-         * // it will appear in our logs with the desired name ('user login')
-         * Promise.all([
-         *   doLogIn('user', 'password'), // passively tracked
-         *   doSomethingElse(),
-         *   doAnotherThing()
-         * ])
-         *   .trackAs('application setup') // actively tracked
-         *   .done(); // persists timing data to collectors
-         */
-        Promise.prototype.trackAs = function trackAs(name, passive) {
-            if (typeof name !== 'string') {
-                throw new TypeError('Method `trackAs` expects a string name.');
-            }
-            this._trackName = name;
-            this._isPassive = !!passive;
-            return this;
-        };
-
-        /**
          * If the promise is in a rejected state, throws an
          * exception. Also, persists the promise tree to any
          * registered timing collectors, if at least one promise
@@ -887,8 +613,6 @@
          * });
          */
         Promise.prototype.done = function done(handler) {
-            this._doneCalled = true;
-            var persist = Timing.persistTimings.bind(this);
             if (typeof handler === 'function') {
                 var wrap = function wrapHandler() {
                     try {
@@ -898,9 +622,10 @@
                 this._failures.push(wrap);
                 this._successes.push(wrap);
             }
-            this._successes.push(persist);
-            this._failures.push(persist);
-            this._failures.push(err.bind(null, this));
+            if (!this._doneCalled) {
+                this._doneCalled = true;
+                this._failures.push(err.bind(null, this));
+            }
         };
 
         /**
@@ -1117,7 +842,7 @@
          */
         Promise.call = function callMethod(fn) {
             if (typeof fn !== 'function') {
-                throw new TypeError('Method expects a function to be specified.');
+                return Promise.resolve(fn);
             }
             var args = [].slice.call(arguments, 1);
             return new Promise(function TryPromise(resolve) {
@@ -1167,9 +892,7 @@
             promises.forEach(function cast(promise, index) {
                 promises[index] = Promise.cast(promise);
             });
-            var parent = new Promise(resolver);
-            promises.forEach(chain.bind(null, parent));
-            return parent;
+            return new Promise(resolver);
         }
 
         /**
@@ -1620,137 +1343,6 @@
                  */
                 disable: function disablePrettyStacks() {
                     usePrettyStacks = false;
-                }
-
-            },
-
-            /**
-             * Allows configuration of timing-related options
-             * in Bloodhound.
-             * @namespace Bloodhound.Promise.config.timing
-             */
-            timing : {
-
-                /**
-                 * Enables the persistence of timing data. This is the
-                 * default state of Bloodhound promises, which you can
-                 * disable by calling `Promise.config.timing.disable()`.
-                 * @function Bloodhound.Promise.config.timing.enable
-                 * @example
-                 * Promise.config.timing.enable();
-                 */
-                enable : function enableTiming() {
-                    Timing.enabled = true;
-                },
-
-                /**
-                 * Disables the persistence of timing data. You can
-                 * re-enable the persistence of timing data by calling
-                 * `Promise.config.timing.enable()`.
-                 * @function Bloodhound.Promise.config.timing.disable
-                 * @example
-                 * Promise.config.timing.disable();
-                 */
-                disable : function disableTiming() {
-                    Timing.enabled = false;
-                },
-
-                /**
-                 * Promises can be chained together in any order. When
-                 * this happens, timing data can look odd -- with child
-                 * promises starting or ending before their parents. By
-                 * enabling sane timings, Bloodhound will re-write the
-                 * timing tree so all children start on or after their
-                 * parents and all parents end on or after their children.
-                 * The timing data will be more consistent but will no
-                 * longer match the real execution order.
-                 * @function Bloodhound.Promise.config.timing.useSaneTimings
-                 * @example
-                 * var parent = Promise.all([
-                 *   Promise.delay(50),
-                 *   Promise.delay(100)
-                 * ]).trackAs('parent');
-                 * // without sane timings, the child promises will both
-                 * // have start timings *before* their parent start time
-                 * Promise.config.timing.useSaneTimings();
-                 * // enabling sane timings is a global operation; every
-                 * // persisted promise will now have timings that have
-                 * // been adjusted for consistency but no longer match
-                 * // the true order of execution
-                 * parent.done(); // persists timing data to collectors
-                 */
-                useSaneTimings : function useSaneTimings() {
-                    Timing.useSaneTimings = true;
-                }
-
-            },
-
-            /**
-             * Allows you to register or un-register timing collectors.
-             * @namespace Bloodhound.Promise.config.collectors
-             */
-            collectors : {
-
-                /**
-                 * Adds a collector to the registered collection. The
-                 * collector will be given timing data when an actively
-                 * tracked promise tree resolves and has `done()` called
-                 * on it.
-                 * @function Bloodhound.Promise.config.collectors.add
-                 * @param collector {Object} An object with a method
-                 *  called `collect` that accepts a single timing data
-                 *  object.
-                 * @returns {Function} A function that can be invoked
-                 *  to de-register the collector. See the example for
-                 *  details.
-                 * @throws 'Parameter `collector` must have a method
-                 *  called `collect`.'
-                 * @example
-                 * var collector = {
-                 *   collect: function(timingData) {
-                 *     log(JSON.stringify(timingData, null, 2));
-                 *   }
-                 * };
-                 * var remove = Promise.config.collectors.add(collector);
-                 * Promise.all([
-                 *   Promise.delay(40, 'abc'),
-                 *   Promise.delay(20, 'def')
-                 * ]).trackAs('tree').done() // persists timing data
-                 *   .finally(remove); // de-registers the collector
-                 */
-                add : function addCollector(collector) {
-                    if (!collector || typeof collector.collect !== 'function') {
-                        throw new Error('Parameter `collector` must have a method called `collect`.');
-                    }
-                    collectors.push(collector);
-                    return Promise.config.collectors.remove.bind(null, collector);
-                },
-
-                /**
-                 * Removes the specified collector from the registered
-                 * collection. Timing data will no longer be persisted
-                 * to the collector unless it is added again.
-                 * @function Bloodhound.Promise.config.collectors.remove
-                 * @param collector {Object} A collector that was registered
-                 *  using `Promise.config.collectors.add()`.
-                 * @example
-                 * var collector = {
-                 *   collect: function(timingData) {
-                 *     log(JSON.stringify(timingData, null, 2));
-                 *   }
-                 * };
-                 * Promise.config.collectors.add(collector);
-                 * Promise.delay(30, 'some value')
-                 *   .trackAs('delay').done() // persists to collector
-                 *   .finally(function() {
-                 *     // remove the collector; this has the same
-                 *     // effect as invoking the de-registration
-                 *     // method returned by calling `add()`.
-                 *     Promise.config.collectors.remove(collector);
-                 *   });
-                 */
-                remove : function removeCollector(collector) {
-                    collectors.splice(collectors.indexOf(collector), 1);
                 }
 
             }
