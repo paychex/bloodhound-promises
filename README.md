@@ -1,5 +1,5 @@
 ## Bloodhound
-### Tracked Promises in JavaScript
+### Promises in JavaScript
 
 ## Installation
 
@@ -25,7 +25,7 @@ To generate JSDoc documentation in the build/dev/doc/bloodhound-promises folder:
     
     npm run-script doc
 
-## Why Bloodhound?
+## Why Promises?
 
 Promises are fantastic. They encapsulate a long-running operation into a simple object that
 invokes callbacks based on the operation's success or failure.
@@ -36,31 +36,11 @@ success or failure will depend on the success or failure of all its children.
 This tree-like structure accurately represents much of the real-world transactional logic of
 modern web applications.
 
-Unfortunately, because these operations can overlap, current performance tracking libraries
-have no way to distinguish each operation -- they simply assume all transactions on a page
-should be grouped together. Or in a single-page application, they assume that everything in
-the current view should be timed together.
-
-But modern single-page applications can have micro-content loading alongside primary content.
-The user can be in any part of an application -- like a slideout drawer showing user messages
-while the main area shows an edit-record view. Current tracking libraries have no way to
-handle this situation.
-
-Enter Bloodhound.
-
 ## How Does Bloodhound Work?
 
 Bloodhound promises work just like regular promises (in fact, it fully implements the
 [A+ spec](https://promisesaplus.com/)), with a lot of the syntactic sugar that other promise
 implementations have popularized.
-
-But unlike other promise libraries, Bloodhound also adds the following instance methods:
-
-`promise.trackAs(name [, passive]) : Promise`
-
-This marks the promise instance as a tracked promise, and then returns that instance for chaining.
-Optionally, you can say the promise is passively tracked. What that means will be explained
-below.
 
 `promise.done() : Promise`
 
@@ -69,174 +49,42 @@ Basically, the golden rule of promises is:
 
     If you don't return the promise, you must call done.
 
-Calling `done` is what tells Bloodhound that it should attempt to gather up any timing data
-in the tree and persist it to any registered collectors. It also throws any unhandled
-rejections / exceptions so you know if there is an error in your application. (Otherwise, your
-app could end up in an inconsistent state.)
+Calling `done` is what tells Bloodhound to throw any unhandled rejections / exceptions so you
+know if there is an error in your application. (Otherwise, your app could end up in an inconsistent
+state.)
 
-Let's look at an example that combines the two new methods:
+Let's look at an example:
 
     function loadMessages() {
         return new Promise(function(resolve, reject) {
             // do real stuff here and
             // call resolve(...) when done
-        }).trackAs('load messages', true);
+        });
     }
     
     function loadAppData() {
         return new Promise(function(resolve, reject) {
             // do real stuff here and
             // call resolve(...) when done
-        }).trackAs('load app data', true);
+        });
     }
     
     Promise.all([
         loadMessages(),
         loadAppData()
-    ]).trackAs('loading').done();
+    ]).done();
 
 What does the code do? Both `loadMessages` and `loadAppData` return a promise that would
-be resolved once their data calls completed. But before the promises are returned, they
-are passively tracked with an appropriate name. Because the promise is being returned,
-we do not call `done()` -- after all, someone else will be consuming our promise, so we
+be resolved once their data calls completed. Because the promises are being returned, we
+do not call `done()` here -- after all, someone else will be consuming our promise, so we
 can't throw any unhandled errors just yet.
 
-    WHAT DOES IT MEAN TO BE PASSIVELY TRACKED?
-    
-    Basically, a passively tracked promise is just a promise that has been given the
-    specified name but will not be persisted to any registered collectors when `done`
-    is called...UNLESS it is part of a larger tree of promises that contains at
-    least one actively tracked promise and that tree has completely settled.
-    
-    WHY USE PASSIVE TRACKING AT ALL?
-    
-    Sometimes you want to control how your promise will appear in timing data but don't
-    actually want it persisted. For example, let's say you're routing all remote HTTP
-    calls through a custom data layer. Your data layer could return a promise that is
-    passively tracked using the remote URL as the name. That way, any reports you run
-    on the generated timing data show clearly what endpoint was taking the longest time
-    to run. But that timing data would not be logged EVERY time a remote call was made,
-    only when a call was made as part of a larger, actively tracked promise tree.
-
 Finally, we wrap our example promises in a call to `Promise.all`, a static method that
-returns a promise which is only resolved if all child promises resolve. But whether that
-promise resolves or reject, we actively track it as 'loading'. You can tell it's actively
-tracked because we didn't specify `true` for the optional `passive` parameter of
-`trackAs`.
+returns a promise which is only resolved if all child promises resolve.
 
 Then we call `done()`, which waits until the promise is either resolved or rejected to
 check for unhandled exceptions and also persist the timing data to any registered
 collectors.
-
-In this case, the timing data might look like the following:
-
-    {
-      "name": "loading",
-      "data": [
-        [
-          "sample",
-          "messages"
-        ],
-        [
-          "sample",
-          "app",
-          "data"
-        ]
-      ],
-      "start": 1425943275662,
-      "stop": 1425943275786,
-      "duration": 124,
-      "children": [
-        {
-          "name": "load messages",
-          "data": [
-            "sample",
-            "messages"
-          ],
-          "start": 1425943275661,
-          "stop": 1425943275716,
-          "duration": 55,
-          "children": []
-        },
-        {
-          "name": "load app data",
-          "data": [
-            "sample",
-            "app",
-            "data"
-          ],
-          "start": 1425943275662,
-          "stop": 1425943275776,
-          "duration": 114,
-          "children": []
-        }
-      ]
-    }
-
-This is already excellent data -- we can quickly see that our application
-is taking a long time loading application data. Before, we would simply see
-that the initial load took 124 milliseconds; but figuring out why would be a
-lot more difficult.
-
-If you look closely, you'll notice that the timing data for 'load messages'
-and 'load app data' both start *before* the parent and end *after*. Why?
-Because that's when they actually occurred. We kicked off those calls *and
-then* passed those promises to `Promise.all`.
-
-Some people don't like seeing data like this; they prefer more consistent
-timing data, where parent promises always start on or before their children
-and always end on or after the last child settles. If this is needed for
-your particular situation, simply configure Bloodhound using the following
-command:
-
-`Promise.config.timing.useSaneTimings();`
-
-This adjusts timing data so parents start on or before their children and
-end on or after their last child settles. With sane timings enabled, the
-above timing data might look like the following:
-
-    {
-      "name": "loading",
-      "data": [
-        [
-          "sample",
-          "messages"
-        ],
-        [
-          "sample",
-          "app",
-          "data"
-        ]
-      ],
-      "start": 1425943993069,
-      "stop": 1425943993193,
-      "duration": 124,
-      "children": [
-        {
-          "name": "load messages",
-          "data": [
-            "sample",
-            "messages"
-          ],
-          "start": 1425943993069,
-          "stop": 1425943993129,
-          "duration": 60,
-          "children": []
-        },
-        {
-          "name": "load app data",
-          "data": [
-            "sample",
-            "app",
-            "data"
-          ],
-          "start": 1425943993069,
-          "stop": 1425943993183,
-          "duration": 114,
-          "children": []
-        }
-      ]
-    }
 
 ## Configuration
 
@@ -283,16 +131,16 @@ features and configuration options.
 
 First, any named callback methods will be passively tracked automatically. Anonymous
 functions are not very helpful in stack traces, so by using named functions, you gain
-both better stack traces and better timing output.
+both better stack traces.
 
-    Promise.resolve('abc').trackAs('parent')
+    Promise.resolve('abc')
       .then(function myNamedCallback() { ... })
       .done();
 
 Here is the resulting promise tree:
 
-    parent (actively tracked)
-     └ myNamedCallback (passively tracked)
+    parent
+     └ myNamedCallback
 
 You can enable pretty stack traces using the following method:
 
@@ -301,9 +149,9 @@ You can enable pretty stack traces using the following method:
 With pretty stacks enabled, code like this...
 
     Promise.all([
-        Promise.delay(50, 'child-1').trackAs('child-1'),
-        Promise.delay(20, 'child-2').trackAs('child-2')
-    ]).trackAs('parent').then(function callback(values) {
+        Promise.delay(50, 'child-1'),
+        Promise.delay(20, 'child-2')
+    ]).then(function callback(values) {
         return new Promise(function(resolve) {
             resolve('some value');
         }).then(function resolved() {
@@ -314,7 +162,7 @@ With pretty stacks enabled, code like this...
 ...will produce error output like this:
 
     ERROR
-       at trackAs: parent
+       at constructor: Promise
        at function: callback
        at constructor: Promise
        at function: resolved
@@ -361,71 +209,6 @@ unhandled promise rejections ensures your application always recovers gracefully
 **NOTE:** The random error rate does *not* apply to `Promise.resolve` or `Promise.reject`.
 These methods will always work as expected by resolving or rejecting with the specified
 value or reason.
-
-### Timing Configuration
-
-`Promise.config.timing.enable()`
-
-Enables the persistence of timing data to any registered collectors. This is the default
-state of Bloodhound.
-
-`Promise.config.timing.disable()`
-
-Disables the persistence of timing data to registered collectors. You can re-enable
-persistence by calling `Promise.config.timing.enable()`.
-
-`Promise.config.timing.useSaneTimings()`
-
-Ensures parent promises are shown as starting on or before their child promises and
-ending on or after their last child promise settles.
-
-### Timing Collectors
-
-Collectors are objects with a single method called `collect` that accepts a timing data
-object and decides what to do with it. For example, a collector for Google Analytics
-may look like this:
-
-    var GACollector = {
-        collect: function(timingData) {
-            ga('send', 'timing', 'myApp', timingData.name, timingData.duration);
-        }
-    };
-
-We could modify our GACollector to send a timing event for all our child timings, too,
-instead of just the root timing. Some collectors may also want us to persist start and
-stop times. All of this information is available through the timingData object, which
-has the following properties:
-
-    name {String} the tracked name of the promise, or 'anonymous'
-    data {*} either the resolved value or rejection reason
-    start {Number} when the promise was created, as the number of milliseconds since
-        midnight, January 1, 1970 UTC
-    stop {Number} when the promise was finally settled, as the number of milliseconds
-        since midnight, January 1, 1970 UTC
-    duration {Number} the difference between start and stop
-    children {Array} an array of child timings
-
-To register or de-register collectors, use the following methods:
-    
-`Promise.config.collectors.add(collector) : Function`
-
-Adds the specified collector to the list of registered collectors, and returns a function
-you can invoke to remove the collector.
-
-    var collector = {
-        collect: function(timingData) {
-            console.log(JSON.stringify(timingData, null, 2));
-        }
-    };
-    
-    var remove = Promise.config.collectors.add(collector);
-
-The above collector simply logs the timingData instance to the browser's console.
-
-`Promise.config.collectors.remove(collector)`
-
-Removes the specified collector from the list of registered collectors. This has the
-same effect as invoking the function returned by `Promise.config.collectors.add`.
 
 ## Full API
 
@@ -881,11 +664,10 @@ constructing the promise tree and that it is safe to persist.
         someOtherLongRunningOperation(),
         anotherLongRunningOperation(),
         ...
-    ]).trackAs('lots of operations').done();
+    ]).done();
     
     // we call done() when it's finally safe to
-    // look for unhandled exceptions and to persist
-    // the timing data to collectors
+    // look for unhandled exceptions
 
 #### promise.timeout(Number*[, String]*) : Promise
 
@@ -927,64 +709,6 @@ you would've had to write code like this:
             }).done();
         }).done();
     }).done();
-
-#### promise.trackAs(String*[, Boolean]*) : Promise
-
-Registers a tracking name with the promise. If the promise timing
-data is persisted to collectors, it will include the specified name.
-
-The second, optional parameter, determines if the promise should be
-passively tracked. Passively tracked promises will *not* be persisted
-to collectors unless they are part of a larger promise tree that
-contains at least one actively tracked promise.
-
-Actively tracked promises are only persisted if `done()` is called.
-
-    Promise.all([
-        Promise.delay(100, 'a').trackAs('child-1'),
-        Promise.delay(200, 'b').trackAs('child-2'),
-        Promise.delay(150, 'c').trackAs('child-3')
-    ]).trackAs('parent').done();
-
-The above tree might produce timing data like this:
-
-    {
-      "name": "parent",
-      "data": [
-        'a',
-        'b',
-        'c'
-      ],
-      "start": 1425943275661,
-      "stop": 1425943275786,
-      "duration": 225,
-      "children": [
-        {
-          "name": "child-1",
-          "data": 'a',
-          "start": 1425943275661,
-          "stop": 1425943275766,
-          "duration": 105,
-          "children": []
-        },
-        {
-          "name": "child-2",
-          "data": 'b',
-          "start": 1425943275661,
-          "stop": 1425943275871,
-          "duration": 210,
-          "children": []
-        },
-        {
-          "name": "child-3",
-          "data": 'c',
-          "start": 1425943275661,
-          "stop": 1425943275816,
-          "duration": 155,
-          "children": []
-        }
-      ]
-    }
 
 #### promise.isRejected() : Boolean
 

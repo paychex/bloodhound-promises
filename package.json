@@ -1,25 +1,25 @@
 {
   "name": "bloodhound-promises",
   "version": "1.1.5",
-  "description": "Promise implementation with built-in timing data.",
+  "description": "Implementation of the Promise specification...with extra goodies.",
   "main": "app/src/Promise.js",
   "directories": {
     "test": "test"
   },
   "keywords": [
     "promise",
-    "tracking",
-    "timing",
-    "performance",
     "async",
     "promises-aplus"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/daninnewyork/Bloodhound.git"
+    "url": "git://github.com/paychex/bloodhound-promises.git"
   },
-  "author": "Dan Barnes",
-  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/paychex/bloodhound-promises/issues"
+  },
+  "author": "Paychex, Inc.",
+  "license": "Apache-2.0",
   "devDependencies": {
     "jsdoc": "^3.3.0-alpha10",
     "karma": "^0.12.23",
