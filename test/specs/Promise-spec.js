@@ -48,11 +48,6 @@ define(['Promise'], function(Promise) {
                 expect(Promise.isPromise(promise)).toBe(true);
             });
 
-            it('sets start time', function() {
-                var promise = new Promise(function() {});
-                expect(promise._start).toBeDefined();
-            });
-
             it('initializes to pending state', function() {
                 var promise = new Promise(function() {});
                 expect(promise._state).toBe(0);
@@ -109,13 +104,6 @@ define(['Promise'], function(Promise) {
                 var original = Promise.resolve(),
                     second = original.then();
                 expect(second).not.toBe(original);
-            });
-
-            it('returned promise is child of original promise', function() {
-                var parent = Promise.resolve(),
-                    child = parent.then();
-                expect(child._parent).toBe(parent);
-                expect(parent._children.indexOf(child)).not.toBe(-1);
             });
 
             it('ignores success callback if not a function', function() {
@@ -515,30 +503,6 @@ define(['Promise'], function(Promise) {
                 });
             });
 
-            it('notifies collectors of timing if timing enabled', function(done) {
-                var collector = {
-                    collect: function(timing) {
-                        expect(timing.data).toBe('value');
-                        expect(timing.duration).toBeGreaterThan(99);
-                        Promise.config.collectors.remove(collector);
-                        done();
-                    }
-                };
-                Promise.config.collectors.add(collector);
-                Promise.delay(100, 'value').trackAs('promise').done();
-            });
-
-            it('does not notify collectors if timing is not enabled', function(done) {
-                var collector = {collect: jasmine.unimplementedMethod_};
-                Promise.config.collectors.add(collector);
-                Promise.config.timing.disable();
-                Promise.delay(50, 'value').done(function() {
-                    Promise.config.collectors.remove(collector);
-                    Promise.config.timing.enable();
-                    done();
-                });
-            });
-
         });
 
         describe('isPromise', function() {
@@ -703,9 +667,10 @@ define(['Promise'], function(Promise) {
             });
 
             it('resolves after specified ms', function(done) {
+                var start = Date.now();
                 var promise = Promise.delay(100);
                 promise.then(function() {
-                    expect(promise._stop).toBeGreaterThan(promise._start + 99);
+                    expect(Date.now()).toBeGreaterThan(start + 99);
                     done();
                 });
             });
@@ -766,10 +731,17 @@ define(['Promise'], function(Promise) {
                 expect(Promise.isPromise(Promise.call(function() {}))).toBe(true);
             });
 
-            it('throws if function not specified', function() {
-                expect(Promise.call.bind(Promise)).toThrow();
-                expect(Promise.call.bind(Promise, 123)).toThrow();
-                expect(Promise.call.bind(Promise, 'abc')).toThrow();
+            it('does not throw if function not specified', function() {
+                expect(Promise.call.bind(Promise)).not.toThrow();
+                expect(Promise.call.bind(Promise, 123)).not.toThrow();
+                expect(Promise.call.bind(Promise, 'abc')).not.toThrow();
+            });
+
+            it('resolves if non-function specified', function(done) {
+                Promise.call(123).then(function(value) {
+                    expect(value).toBe(123);
+                    done();
+                });
             });
 
             it('passes additional args to function', function(done) {
@@ -979,18 +951,6 @@ define(['Promise'], function(Promise) {
                 .done();
             });
 
-            it('creates chains', function() {
-                var children = [
-                        Promise.delay(20, 'abc'),
-                        Promise.delay(40, new Error()),
-                        Promise.delay(100, 'def'),
-                        Promise.delay(60, 'ghi'),
-                        Promise.reject()
-                    ],
-                    parent = Promise.some(children, 2);
-                expect(parent._children).toEqual(children);
-            });
-
         });
 
         describe('all', function() {
@@ -1058,185 +1018,6 @@ define(['Promise'], function(Promise) {
 
         });
 
-        describe('trackAs', function() {
-
-            it('throws if non-string is passed', function() {
-                var promise = Promise.resolve(),
-                    message = 'Method `trackAs` expects a string name.';
-                expect(promise.trackAs.bind(promise)).toThrowError(message);
-                expect(promise.trackAs.bind(promise, 123)).toThrowError(message);
-                expect(promise.trackAs.bind(promise, new Date())).toThrowError(message);
-            });
-
-            it('if passive not specified, defaults to active', function() {
-                expect(Promise.resolve().trackAs('active')._isPassive).toBe(false);
-            });
-
-            it('passively tracked not collected on done', function(done) {
-                var collector = jasmine.createSpyObj('collector', ['collect']),
-                    promise = Promise.all([
-                        Promise.delay(10, 'abc').trackAs('child-1', true),
-                        Promise.delay(30, 'def').trackAs('child-2', true),
-                        Promise.delay(20, 'ghi')
-                    ]).trackAs('parent', true);
-                Promise.config.collectors.add(collector);
-                promise.done(function() {
-                    expect(collector.collect).not.toHaveBeenCalled();
-                    Promise.config.collectors.remove(collector);
-                    done();
-                });
-            });
-
-            it('timing data is correct', function(done) {
-                var collector = {
-                    collect: function(timingData) {
-                        expect(timingData.name).toBe('active-parent');
-                        expect(timingData.children.length).toBe(3);
-                        expect(timingData.children[0].name).toBe('child-1');
-                        expect(timingData.children[1].name).toBe('child-2');
-                        expect(timingData.children[2].name).toBe('anonymous');
-                        expect(timingData.children[0].children.length).toBe(0);
-                        expect(timingData.children[1].children.length).toBe(0);
-                        expect(timingData.children[2].children.length).toBe(1);
-                        expect(timingData.children[2].children[0].name).toBe('hello');
-                        Promise.config.collectors.remove(collector);
-                        done();
-                    }
-                };
-                Promise.config.collectors.add(collector);
-                Promise.all([
-                    Promise.resolve('abc').trackAs('child-1', true),
-                    Promise.delay(30, 'def').trackAs('child-2', true),
-                    Promise.delay(20, 'ghi').then(function hello() {})
-                ]).trackAs('active-parent').done();
-            });
-
-            it('if child done but parent not settled, nothing collected', function() {
-                var collector = jasmine.createSpyObj('collector', ['collect']);
-                Promise.config.collectors.add(collector);
-                Promise.all([
-                    Promise.resolve('abc').trackAs('child-1', true).done(),
-                    Promise.delay(30, 'def').trackAs('child-2', true),
-                    Promise.delay(20, 'ghi')
-                ]).trackAs('active-parent');
-                expect(collector.collect).not.toHaveBeenCalled();
-                Promise.config.collectors.remove(collector);
-            });
-
-        });
-
-        describe('chain', function() {
-
-            it('adds child to parent', function() {
-                var parent = Promise.resolve(),
-                    child = parent.then();
-                expect(child._parent).toBe(parent);
-                expect(parent._children.indexOf(child)).not.toBe(-1);
-            });
-
-            it('adds returned child to callback', function(done) {
-
-                var parent = Promise.resolve().trackAs('parent'),
-                    root = Promise.resolve().trackAs('root'),
-                    child = root.then().then().then().trackAs('child');
-
-                parent.then(function callback() {
-                    return child;
-                }).done(function() {
-                    expect(root._parent._trackName).toBe('callback');
-                    done();
-                });
-
-            });
-
-            it('throws if child is ancestor of parent', function(done) {
-                var ancestor = Promise.delay(20),
-                    parent = ancestor.then(function() {
-                        return parent;
-                    }).catch(function(err) {
-                        expect(err.message).toBe('Cycle would be created in promise chain.');
-                        done();
-                    });
-            });
-
-            it('does not chain if parent is child', function(done) {
-                var parent = Promise.delay(20),
-                    chained = parent.then(function() {
-                        return parent;
-                    }).finally(function() {
-                        expect(parent._parent).toBe(null);
-                        expect(chained._children.length).toBe(0);
-                        done();
-                    });
-            });
-
-            it('does not chain if parent is ancestor of child', function(done) {
-                var parent = Promise.delay(20).trackAs('parent'),
-                    child = parent.then().trackAs('child');
-                child.then(function() {
-                    return parent;
-                }).finally(function() {
-                    expect(child._parent).toBe(parent);
-                    expect(parent._children.indexOf(child)).not.toBe(-1);
-                    done();
-                });
-            });
-
-            it('bug #15: does not chain if cycle *would be* created', function(done) {
-
-                var base = Promise.delay(10, 'base').trackAs('base'),
-                    parent = base.then(function createParent() {
-                        return Promise.delay(10, 'parent').trackAs('parent');
-                    }),
-                    child = parent.then(function createChildFromBase() {
-                        return base.then(function baseResolvedCreateChild() {
-                            return Promise.delay(10, 'child').trackAs('child');
-                        });
-                    });
-
-                child.then(done); // should resolve
-
-            });
-
-            it('does not chain if cycle *would be* created', function(done) {
-
-                var called = [],
-                    init = Promise.delay(100, 'init'),
-                    load = Promise.delay(200, 'load').then(function() {
-                        return {
-                            method: function() {
-                                return init.then(function() {
-                                    return Promise.delay(100, 'value');
-                                });
-                            }
-                        };
-                    });
-
-                setTimeout(function() {
-                    load.then(function(api) {
-                        return api.method().then(function(value) {
-                            called.push(1);
-                            expect(value).toBe('value');
-                            expect(called).toEqual([1]);
-                        });
-                    }).done();
-                }, 1000);
-
-                setTimeout(function() {
-                    load.then(function(api) {
-                        return api.method().then(function(value) {
-                            called.push(2);
-                            expect(value).toBe('value');
-                            expect(called).toEqual([1, 2]);
-                            done();
-                        });
-                    }).done();
-                }, 2000);
-
-            });
-
-        });
-
         describe('config', function() {
 
             describe('warnIfDoneNotCalled', function() {
@@ -1259,7 +1040,7 @@ define(['Promise'], function(Promise) {
                     setTimeout(function() {
                         expect(console.warn).toHaveBeenCalled();
                         done();
-                    }, 20);
+                    }, 1100);
                 });
 
                 it('does not warn if enabled and done called', function(done) {
@@ -1382,80 +1163,6 @@ define(['Promise'], function(Promise) {
 
             });
 
-            describe('collectors', function() {
-
-                describe('add', function() {
-
-                    it('adds collector', function(done) {
-                        var collector = {
-                            collect: function() {
-                                Promise.config.collectors.remove(collector);
-                                done();
-                            }
-                        };
-                        Promise.config.collectors.add(collector);
-                        Promise.delay(10).trackAs('promise').done();
-                    });
-
-                    it('returns method to remove the collector', function(done) {
-                        var collector = {
-                                collect: function() {
-                                    remove();
-                                    done();
-                                }
-                            },
-                            remove = Promise.config.collectors.add(collector);
-                        Promise.delay(10).trackAs('promise').done();
-                    });
-
-                    it('throws if argument falsy', function() {
-                        expect(Promise.config.collectors.add.bind(null)).toThrow();
-                        expect(Promise.config.collectors.add.bind(null, NaN)).toThrow();
-                        expect(Promise.config.collectors.add.bind(null, null)).toThrow();
-                        expect(Promise.config.collectors.add.bind(null, false)).toThrow();
-                    });
-
-                    it('throws if collect method not found', function() {
-                        expect(Promise.config.collectors.add.bind(null, {})).toThrow();
-                    });
-
-                });
-
-                describe('remove', function() {
-
-                    it('remove removes collector', function(done) {
-                        var collector = {
-                                collect: jasmine.createSpy('collect')
-                            },
-                            remove = Promise.config.collectors.add(collector);
-                        Promise.delay(10).trackAs('promise').done();
-                        var interval = setInterval(function() {
-                            if (collector.collect.calls.any()) {
-                                clearInterval(interval);
-                                remove();
-                                Promise.delay(10).trackAs('promise').done();
-                                setTimeout(function() {
-                                    if (collector.collect.calls.count() !== 1) {
-                                        throw new Error();
-                                    }
-                                    done();
-                                }, 50);
-                            }
-                        }, 10);
-                    });
-
-                    it('removing collector that DNE has no effect', function() {
-                        Promise.config.collectors.remove();
-                        Promise.config.collectors.remove(null);
-                        Promise.config.collectors.remove({});
-                        Promise.config.collectors.remove({collect: jasmine.unimplementedMethod_ });
-                    });
-
-                });
-
-            });
-
-
             describe('setRandomErrorRate', function() {
 
                 afterEach(function() {
@@ -1520,52 +1227,6 @@ define(['Promise'], function(Promise) {
 
             });
 
-            describe('timing', function() {
-
-                it('disable disables timing', function(done) {
-                    Promise.config.timing.disable();
-                    var remove = Promise.config.collectors.add({
-                        collect: jasmine.unimplementedMethod_
-                    });
-                    Promise.delay(10).trackAs('promise').done(function() {
-                        remove();
-                        done();
-                    });
-                });
-
-                it('enable enables timing', function(done) {
-                    Promise.config.timing.disable();
-                    Promise.config.timing.enable();
-                    var remove = Promise.config.collectors.add({
-                        collect: done
-                    });
-                    Promise.delay(10).trackAs('promise').done(remove);
-                });
-
-                it('useSaneTimings works', function(done) {
-                    var collector = {
-                        collect: function(timingData) {
-                            var getMinMax = function getMinMax(timing, prop, op) {
-                                    return timing.children.map(function map(t) {
-                                        return t[prop];
-                                    }).sort()[op]();
-                                },
-                                minChildStart = getMinMax(timingData, 'start', 'shift'),
-                                maxChildStop = getMinMax(timingData, 'stop', 'pop');
-                            expect(timingData.start).not.toBeGreaterThan(minChildStart);
-                            expect(timingData.stop).not.toBeLessThan(maxChildStop);
-                            Promise.config.collectors.remove(collector);
-                            done();
-                        }
-                    };
-                    Promise.config.timing.useSaneTimings();
-                    Promise.config.collectors.add(collector);
-                    Promise.all([
-                        Promise.delay(20).trackAs('child').then(function grandchild() {})
-                    ]).trackAs('parent').done();
-                });
-
-            });
         });
 
     });

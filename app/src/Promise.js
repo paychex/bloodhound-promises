@@ -289,7 +289,7 @@
             promise._failures = wrapPush(promise, [], States.REJECTED);
             promise._state = States.PENDING;
 
-            async(function invoke() {
+            fn !== noop && async(function invoke() {
                 if (!ignoreFailureRate && errorRate > 0 && Math.random() <= errorRate) {
                     reject(new Error('random error!'));
                 } else {
