@@ -775,18 +775,12 @@ define(['Promise'], function(Promise) {
                 });
             });
 
-        });
-
-        describe('apply', function() {
-
-            it('defers to call', function(done) {
-                spyOn(Promise, 'call').and.callThrough();
-                Promise.apply(function(arg1, arg2) {
-                    expect(Promise.call).toHaveBeenCalled();
-                    expect(arg1).toBe('abc');
-                    expect(arg2).toBe(123);
+            it('defers to apply', function() {
+                spyOn(Promise, 'apply').and.callThrough();
+                Promise.call(function() {
+                    expect(Promise.apply).toHaveBeenCalledWith(jasmine.any(Function), ['abc', 123]);
                     done();
-                }, ['abc', 123]);
+                }, 'abc', 123);
             });
 
         });

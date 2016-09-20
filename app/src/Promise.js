@@ -125,7 +125,7 @@
                     var then,
                         called = false;
 
-                    try {
+                    attempt(function nestedResolver() {
                         then = x.then;
                         if (typeof then === 'function') {
                             then.call(x,
@@ -145,12 +145,12 @@
                             settle(promise, States.RESOLVED, x);
                             called = true;
                         }
-                    } catch (e) {
+                    }, noop, function failure(reason) {
                         if (!called) {
-                            settle(promise, States.REJECTED, e);
+                            settle(promise, States.REJECTED, reason);
                             called = true;
                         }
-                    }
+                    });
 
                 } else {
                     settle(promise, States.RESOLVED, x);
@@ -164,11 +164,11 @@
                 // according to the Promise/A+ specification
                 return function parentSettled(value) {
                     if (typeof callback === 'function') {
-                        try {
-                            RESOLVER(child, callback(value));
-                        } catch (err) {
-                            reject(err);
-                        }
+                        attempt(callback, function success(result) {
+                            RESOLVER(child, result);
+                        }, function failure(reason) {
+                            reject(reason);
+                        }, value);
                     } else {
                         propagate(value);
                     }
@@ -293,11 +293,7 @@
                 if (!ignoreFailureRate && errorRate > 0 && Math.random() <= errorRate) {
                     reject(new Error('random error!'));
                 } else {
-                    try {
-                        fn.call(promise, resolve, reject, notify);
-                    } catch (err) {
-                        reject(err);
-                    }
+                    attempt(fn.bind(promise), noop, reject, resolve, reject, notify);
                 }
             });
 
@@ -464,11 +460,7 @@
         Promise.prototype.tap = function onTap(callback) {
             return this.then(function tapValue(value) {
                 if (typeof callback === 'function') {
-                    try {
-                        callback(value);
-                    } catch (err) {
-                        // swallow
-                    }
+                    attempt(callback, noop, noop, value);
                 }
                 return value;
             });
@@ -615,9 +607,7 @@
         Promise.prototype.done = function done(handler) {
             if (typeof handler === 'function') {
                 var wrap = function wrapHandler() {
-                    try {
-                        handler(this._data);
-                    } catch (e) {}
+                    attempt(handler, noop, noop, this._data);
                 }.bind(this);
                 this._failures.push(wrap);
                 this._successes.push(wrap);
@@ -841,14 +831,28 @@
          * }).done();
          */
         Promise.call = function callMethod(fn) {
-            if (typeof fn !== 'function') {
-                return Promise.resolve(fn);
-            }
-            var args = [].slice.call(arguments, 1);
-            return new Promise(function TryPromise(resolve) {
-                resolve(fn.apply(null, args));
-            });
+            var args = toArray(arguments, 1);
+            return Promise.apply(fn, args);
         };
+
+        function toArray(arrayLike, startIndex) {
+            startIndex = startIndex || 0;
+            var length = arrayLike.length,
+                size = Math.max(length - startIndex, 0);
+            var result = new Array(size);
+            for(var i = 0; i < size; i++) {
+                result[i] = arrayLike[startIndex++];
+            }
+            return result;
+        }
+
+        function attempt(fn, success, failure) {
+            try {
+                return success(fn.apply(undefined, toArray(arguments, 3)));
+            } catch(e) {
+                return failure(e);
+            }
+        }
 
         /**
          * Wraps a function apply in a promise. The return value of
@@ -880,7 +884,25 @@
          * }).done();
          */
         Promise.apply = function applyMethod(fn, args) {
-            return Promise.call.apply(Promise, [fn].concat(args || []));
+
+            if (typeof fn !== 'function') {
+                return Promise.when(fn);
+            }
+
+            return attempt(function invoke() {
+                return fn.apply(null, args);
+            }, function success(result) {
+                if (Promise.isPromise(result)) {
+                    return result;
+                } else if (result instanceof Error) {
+                    return Promise.reject(result);
+                } else {
+                    return Promise.when(result);
+                }
+            }, function failure(reason) {
+                return Promise.reject(reason);
+            });
+
         };
 
         /** array methods **/
