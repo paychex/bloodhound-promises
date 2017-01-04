@@ -497,10 +497,13 @@
          * is settled (i.e. either resolved or rejected) and
          * returns a new promise instance. If the registered
          * callback returns a promise, the original returned
-         * promise will defer to the callback's promise. Otherwise,
-         * any other return value will be ignored, and subsequent
-         * chained callbacks will receive the original promise
-         * value or rejection.
+         * promise will wait for the returned promise to settle.
+         * If the settled promise is rejected, the new rejection
+         * reason will be propagated. If the settled promise is
+         * resolved, the ORIGINAL promise value (whether resolved
+         * or rejected) will be propagated. Non-Promise returned
+         * values are ignored in favor of the original promise
+         * value.
          * @function Bloodhound.Promise#finally
          * @param [callback] {Function} The function to invoke
          *  when the promise is settled (resolved or rejected).
@@ -519,13 +522,22 @@
          *   }).then(function(value) {
          *     log(valueOrReason); // still 'def'
          *   });
+         * @example
+         * Promise.resolve(50, 'abc')
+         *   .finally(function(reason) {
+         *     throw new Error('hello');
+         *   }).catch(function(err) {
+         *     log(err.message); // 'hello'
+         *   });
          */
         Promise.prototype.finally = function onSettled(callback) {
             function getWrappedCallback(isError) {
                 return function finallyCallback(valueOrReason) {
                     var value = callback(valueOrReason);
                     if (Promise.isPromise(value)) {
-                        return value;
+                        return value.then(function propagateOriginal() {
+                            return valueOrReason;
+                        });
                     } else if (isError) {
                         throw valueOrReason;
                     } else {

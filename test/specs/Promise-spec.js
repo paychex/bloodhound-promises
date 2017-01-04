@@ -364,13 +364,47 @@ define(['Promise'], function(Promise) {
                     .done();
             });
 
-            it('if callback returns promise, promise defers to it', function(done) {
+            it('if callback returns a non-promise, original value passes through', function(done) {
+                Promise.delay(10, 'original value')
+                    .finally(function callback() {
+                        return 'new value';
+                    })
+                    .then(function verify(result) {
+                        expect(result).toBe('original value');
+                        done();
+                    }).done();
+            });
+
+            it('if callback returns a resolved promise, wait then use original value', function(done) {
+                var delayed = false;
                 Promise.delay(10, 'abc')
                     .finally(function callback(value) {
-                        return Promise.delay(20, 'hello ' + value);
+                        return Promise.delay(20)
+                            .then(function() {
+                                delayed = true;
+                                return 'hello ' + value;
+                            });
                     })
                     .then(function(value) {
-                        expect(value).toBe('hello abc');
+                        expect(delayed).toBe(true);
+                        expect(value).toBe('abc');
+                        done();
+                    }).done();
+            });
+
+            it('if callback returns a rejected promise, wait then use new rejection reason', function(done) {
+                var delayed = false;
+                Promise.delay(10, 'value')
+                    .finally(function callback() {
+                        return Promise.delay(20)
+                            .then(function() {
+                                delayed = true;
+                                return new Error('new error');
+                            });
+                    })
+                    .catch(function(err) {
+                        expect(delayed).toBe(true);
+                        expect(err.message).toBe('new error');
                         done();
                     }).done();
             });
