@@ -1090,8 +1090,12 @@
          * specified number of provided promises resolve.
          * The resolved value will be an array of the
          * resolved promise values. If the expected number
-         * of promises do not resolve, the returned promise
-         * will be rejected.
+         * of promises are not resolved, the returned promise
+         * will be rejected. The rejection will be either an
+         * array of the supplied rejection reasons; or, if
+         * only 1 promise needed to reject for the overall
+         * promise to fail, then it will be the single
+         * rejection reason, and *not* an array.
          * @function Bloodhound.Promise.some
          * @param promises {Bloodhound.Promise[]}
          * @param count {Number}
@@ -1135,14 +1139,12 @@
                         resolved[index] = BAD_TOKEN;
                         rejectionData.push(data);
                         if (++numRejected > (total - count)) {
-                            var empty = 'Error: ',
-                                fallback = '(none given)',
-                                errorMessage = rejectionData.reduce(function(msg, rejection) {
-                                    var error = (rejection || empty).toString();
-                                    return msg + '\n - ' + (error === empty ? fallback : error);
-                                }, numRejected + ' promises failed; rejection reasons:');
                             notify(100);
-                            reject(errorMessage);
+                            if (numRejected === 1) {
+                                reject(rejectionData[0])
+                            } else {
+                                reject(rejectionData);
+                            }
                         } else {
                             notify(Math.ceil((numResolved + numRejected) / count * 100));
                         }
@@ -1168,7 +1170,10 @@
          * Returns a promise that will be resolved if
          * any of the specified promises resolve. The
          * resolved value will be an array that contains
-         * the resolved promise(s).
+         * the resolved promise(s). The rejection reason
+         * will either be an array (if more than 1 promise
+         * rejected) or the single rejection reason (if
+         * only 1 promise rejected).
          * @function Bloodhound.Promise.any
          * @param promises {Bloodhound.Promise[]}
          * @returns {Bloodhound.Promise}
@@ -1190,8 +1195,9 @@
          * once all of the specified promises resolve.
          * If even one of the specified promises is
          * rejected, the returned promise will also
-         * be rejected. The resolved value will be an
-         * array containing all of the resolved values.
+         * be rejected, with the first rejection reason.
+         * The resolved value will be an array containing
+         * all of the resolved values.
          * @function Bloodhound.Promise.all
          * @param promises {Bloodhound.Promise[]}
          * @returns {Bloodhound.Promise}

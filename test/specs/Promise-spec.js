@@ -941,7 +941,8 @@ define(['Promise'], function(Promise) {
                     Promise.delay(100, 'ghi'),
                     Promise.reject()
                 ], 4).catch(function(reason) {
-                    expect(reason).toContain('2 promises failed');
+                    expect(Array.isArray(reason)).toBe(true);
+                    expect(reason.length).toBe(2);
                     done();
                 });
             });
@@ -977,6 +978,43 @@ define(['Promise'], function(Promise) {
                 })
                 .finally(done)
                 .done();
+            });
+
+            it('does not change type of rejection reason', function(done) {
+                Promise.some([
+                    Promise.delay(10, new Error()),
+                    Promise.reject('first')
+                ], 1).catch(function(errors) {
+                    expect(Array.isArray(errors)).toBe(true);
+                    expect(typeof errors[0]).toBe('string');
+                    expect(errors[1] instanceof Error).toBe(true);
+                    done();
+                });
+            });
+
+            it('rejects with first error if only 1 needed to fail', function(done) {
+                Promise.some([
+                    Promise.delay(30, new Error('third')),
+                    Promise.delay(10, new Error('first')),
+                    Promise.delay(20, new Error('second'))
+                ], 3).catch(function(err) {
+                    expect(err instanceof Error).toBe(true);
+                    expect(err.message).toBe('first');
+                    done();
+                });
+            });
+
+            it('returns array of Error instance if more than 1 failed', function(done) {
+                Promise.some([
+                    Promise.delay(30, new Error('third')),
+                    Promise.delay(10, new Error('first')),
+                    Promise.delay(20, new Error('second'))
+                ], 2).catch(function(err) {
+                    expect(Array.isArray(err)).toBe(true);
+                    expect(err[0].message).toBe('first');
+                    expect(err[1].message).toBe('second');
+                    done();
+                });
             });
 
         });
