@@ -684,7 +684,7 @@
         /**
          * Returns a promise that is immediately resolved with
          * the specified value.
-         * @param value {*}
+         * @param [value] {*}
          * @returns {Bloodhound.Promise}
          * @example
          * Promise.resolve('abc');
@@ -699,7 +699,7 @@
         /**
          * Returns a promise that is immediately rejected
          * with the specified reason.
-         * @param reason {String|Error}
+         * @param [reason] {String|Error}
          * @returns {Bloodhound.Promise}
          * @example
          * Promise.reject('the operation failed');
