@@ -18,7 +18,7 @@ define(['Promise'], function(Promise) {
     describe('Promise', function() {
 
         beforeEach(function() {
-            this.enableSync = function enableSync() {
+            this.enableSync = function () {
                 this.origScheduler = window.setTimeout;
                 Promise.config.setScheduler(function scheduler(fn) {
                     return fn();
@@ -55,7 +55,7 @@ define(['Promise'], function(Promise) {
 
             it('invokes the function asynchronously', function(done) {
                 var hit = false;
-                var promise = new Promise(function() {
+                new Promise(function() {
                     expect(hit).toBe(true);
                     done();
                 });
@@ -142,20 +142,20 @@ define(['Promise'], function(Promise) {
             });
 
             it('returned promise resolves with value of original promise', function(done) {
-                var parent = Promise.delay(100, 'abc'),
-                    child = parent.then(function success(value) {
-                        expect(value).toBe('abc');
-                        done();
-                    });
+                var parent = Promise.delay(100, 'abc');
+                parent.then(function success(value) {
+                    expect(value).toBe('abc');
+                    done();
+                });
             });
 
             it('returned promise rejects with reason of original promise', function(done) {
                 var err = new Error(),
-                    parent = Promise.delay(100, err),
-                    child = parent.then(null, function rejected(reason) {
-                        expect(reason).toBe(err);
-                        done();
-                    });
+                    parent = Promise.delay(100, err);
+                parent.then(null, function rejected(reason) {
+                    expect(reason).toBe(err);
+                    done();
+                });
             });
 
             it('parent resolved with child promise throws TypeError', function(done) {
@@ -188,11 +188,11 @@ define(['Promise'], function(Promise) {
             });
 
             it('parent resolved with value resolves child with same value', function(done) {
-                var parent = Promise.resolve(123),
-                    child = parent.then(function(value) {
-                        expect(value).toBe(123);
-                        done();
-                    });
+                var parent = Promise.resolve(123);
+                parent.then(function(value) {
+                    expect(value).toBe(123);
+                    done();
+                });
             });
 
             it('success callbacks fire in order provided', function(done) {
@@ -224,26 +224,17 @@ define(['Promise'], function(Promise) {
 
             it('resolved promise `then` only called once', function(done) {
 
-                var count = 0;
-
                 var promise = Promise.resolve(),
-                    thenable = Object.create(null, {
-                        then: {
-                            get: function() {
-                                ++count;
-                                return function(onFulfilled) {
-                                    onFulfilled();
-                                };
-                            }
-                        }
-                    });
+                    thenable = {
+                        then: jasmine.createSpy('then')
+                    };
 
                 promise.then(function() {
                     return thenable;
                 });
 
                 promise.then(function() {
-                    expect(count).toBe(1);
+                    expect(thenable.then.calls.count()).toBe(1);
                     done();
                 });
 
@@ -303,7 +294,9 @@ define(['Promise'], function(Promise) {
             });
 
             it('callback only invoked if promise is resolved', function(done) {
-                Promise.reject('reason').tap(jasmine.unimplementedMethod_);
+                Promise.reject('reason').tap(function() {
+                    throw new Error();
+                });
                 Promise.resolve('abc').tap(done);
             });
 
@@ -809,7 +802,7 @@ define(['Promise'], function(Promise) {
                 });
             });
 
-            it('defers to apply', function() {
+            it('defers to apply', function(done) {
                 spyOn(Promise, 'apply').and.callThrough();
                 Promise.call(function() {
                     expect(Promise.apply).toHaveBeenCalledWith(jasmine.any(Function), ['abc', 123]);
@@ -941,7 +934,8 @@ define(['Promise'], function(Promise) {
                     Promise.delay(100, 'ghi'),
                     Promise.reject()
                 ], 4).catch(function(reason) {
-                    expect(reason).toContain('2 promises failed');
+                    expect(Array.isArray(reason)).toBe(true);
+                    expect(reason.length).toBe(2);
                     done();
                 });
             });
@@ -977,6 +971,43 @@ define(['Promise'], function(Promise) {
                 })
                 .finally(done)
                 .done();
+            });
+
+            it('does not change type of rejection reason', function(done) {
+                Promise.some([
+                    Promise.delay(10, new Error()),
+                    Promise.reject('first')
+                ], 1).catch(function(errors) {
+                    expect(Array.isArray(errors)).toBe(true);
+                    expect(typeof errors[0]).toBe('string');
+                    expect(errors[1] instanceof Error).toBe(true);
+                    done();
+                });
+            });
+
+            it('rejects with first error if only 1 needed to fail', function(done) {
+                Promise.some([
+                    Promise.delay(30, new Error('third')),
+                    Promise.delay(10, new Error('first')),
+                    Promise.delay(20, new Error('second'))
+                ], 3).catch(function(err) {
+                    expect(err instanceof Error).toBe(true);
+                    expect(err.message).toBe('first');
+                    done();
+                });
+            });
+
+            it('returns array of Error instance if more than 1 failed', function(done) {
+                Promise.some([
+                    Promise.delay(30, new Error('third')),
+                    Promise.delay(10, new Error('first')),
+                    Promise.delay(20, new Error('second'))
+                ], 2).catch(function(err) {
+                    expect(Array.isArray(err)).toBe(true);
+                    expect(err[0].message).toBe('first');
+                    expect(err[1].message).toBe('second');
+                    done();
+                });
             });
 
         });
@@ -1115,12 +1146,14 @@ define(['Promise'], function(Promise) {
                 });
 
                 it('returns function to remove handler', function(done) {
-                    var handler = jasmine.createSpy('handler').and.callFake(function(e) {
+                    var handler = /** @type {function} */
+                        jasmine.createSpy('handler').and.callFake(function(e) {
                             remove();
                             expect(e.reason).toBe('reason 1');
                             e.handled = true;
                         }),
-                        handler2 = jasmine.createSpy('handler2').and.callFake(function(e) {
+                        handler2 = /** @type {function} */
+                        jasmine.createSpy('handler2').and.callFake(function(e) {
                             remove2();
                             expect(e.reason).toBe('reason 2');
                             expect(handler).not.toHaveBeenCalledWith('reason 2');
