@@ -1067,21 +1067,10 @@
          */
         Promise.race = function race(promises) {
             return getArrayPromise(promises, function RacePromise(resolve, reject) {
-                var numRejected = 0,
-                    total = promises.length,
-                    checkPossible = function checkPossible() {
-                        if (++numRejected >= total) {
-                            reject();
-                        }
-                    };
-                if (total === 0) {
-                    reject('No promises to race.');
-                } else {
-                    promises.forEach(function iter(child) {
-                        child._successes.push(resolve);
-                        child._failures.push(checkPossible);
-                    });
-                }
+                promises.forEach(function attachHandlers(child) {
+                    child._successes.push(resolve);
+                    child._failures.push(reject);
+                });
             });
         };
 

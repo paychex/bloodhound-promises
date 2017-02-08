@@ -871,16 +871,24 @@ define(['Promise'], function(Promise) {
                 });
             });
 
-            it('rejects if all promises reject', function(done) {
+            it('rejects with first rejected value', function(done) {
+                var err = new Error();
                 Promise.race([
-                    Promise.delay(50, new Error()),
-                    Promise.delay(25, new Error()),
-                    Promise.reject()
-                ]).catch(done);
+                    Promise.delay(100, 'abc'),
+                    Promise.delay(50, 'def'),
+                    Promise.delay(25, err)
+                ]).catch(function verify(e) {
+                    expect(e).toBe(err);
+                    done();
+                });
             });
 
-            it('rejects if empty array provided', function(done) {
-                Promise.race([]).catch(done);
+            it('does not resolve if empty array provided', function(done) {
+                var timeoutError = new Error();
+                Promise.race([]).timeout(100, timeoutError).catch(function verify(err) {
+                    expect(err).toBe(timeoutError);
+                    done();
+                });
             });
 
         });
