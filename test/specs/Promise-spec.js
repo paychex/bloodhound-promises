@@ -17,21 +17,6 @@ define(['Promise'], function(Promise) {
 
     describe('Promise', function() {
 
-        beforeEach(function() {
-            this.enableSync = function () {
-                this.origScheduler = window.setTimeout;
-                Promise.config.setScheduler(function scheduler(fn) {
-                    return fn();
-                });
-            }.bind(this);
-        });
-
-        afterEach(function() {
-            if (!!this.origScheduler) {
-                Promise.config.setScheduler(this.origScheduler);
-            }
-        });
-
         it('exists', function() {
             expect(typeof Promise).toBe('function');
         });
@@ -464,13 +449,15 @@ define(['Promise'], function(Promise) {
         describe('done', function() {
 
             it('throws error if promise rejected', function(done) {
-                this.enableSync();
-                try {
-                    Promise.reject('rejected').done();
-                } catch (err) {
-                    expect(err.message).toBe('rejected');
-                    done();
-                }
+                spyOn(window, 'setTimeout');
+                Promise.reject('rejected').done();
+                var token = setInterval(function verify() {
+                    if (window.setTimeout.calls.any) {
+                        clearInterval(token);
+                        expect(window.setTimeout.calls.argsFor(0)[0]).toThrowError('rejected');
+                        done();
+                    }
+                }, 25);
             });
 
             it('does not throw error if rejection caught before done', function(done) {
@@ -1193,15 +1180,18 @@ define(['Promise'], function(Promise) {
                 });
 
                 it('throws exception if no handler sets e.handled to true', function(done) {
-                    this.enableSync();
+                    spyOn(window, 'setTimeout');
                     var handler = function(e) {},
                         remove = Promise.config.onUnhandledRejection(handler);
-                    try {
-                        Promise.reject('reason').done();
-                    } catch (e) {
-                        remove();
-                        done();
-                    }
+                    Promise.reject('rejected').done();
+                    var token = setInterval(function verify() {
+                        if (window.setTimeout.calls.any) {
+                            clearInterval(token);
+                            expect(window.setTimeout.calls.mostRecent().args[0]).toThrowError('rejected');
+                            remove();
+                            done();
+                        }
+                    }, 25);
                 });
 
             });

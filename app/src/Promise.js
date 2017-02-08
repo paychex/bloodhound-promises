@@ -85,7 +85,7 @@
                     }
                 }
                 if (!e.handled) {
-                    async(function throwError() {
+                    setTimeout(function throwError() {
                         if (usePrettyStacks) {
                             throw new UncaughtRejection(reason, promise);
                         } else if (!(reason instanceof Error)) {
@@ -93,7 +93,7 @@
                         } else {
                             throw reason;
                         }
-                    });
+                    }, 0);
                 }
             },
 
