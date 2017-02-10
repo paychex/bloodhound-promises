@@ -17,6 +17,13 @@ define(['Promise'], function(Promise) {
 
     describe('Promise', function() {
 
+        beforeEach(function setScheduler() {
+            // wrapping setTimeout lets us spy on it later
+            Promise.config.setScheduler(function(fn) {
+                setTimeout(fn, 0);
+            });
+        });
+
         it('exists', function() {
             expect(typeof Promise).toBe('function');
         });
