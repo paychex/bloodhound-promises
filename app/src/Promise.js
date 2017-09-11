@@ -67,6 +67,10 @@
 
             noop = function noop() {},
 
+            errorHandler = function throwError(err) {
+                throw err;
+            },
+
             doneNotCalled = function doneNotCalled() {
                 /* jshint -W117 */
                 if (!!console) {
@@ -87,11 +91,11 @@
                 if (!e.handled) {
                     async(function throwError() {
                         if (usePrettyStacks) {
-                            throw new UncaughtRejection(reason, promise);
+                            errorHandler(new UncaughtRejection(reason, promise));
                         } else if (!(reason instanceof Error)) {
-                            throw new Error(reason);
+                            errorHandler(new Error(reason));
                         } else {
-                            throw reason;
+                            errorHandler(reason);
                         }
                     });
                 }
@@ -1286,6 +1290,29 @@
                         return fn.apply(null, args);
                     });
                 };
+            },
+
+            /**
+             * Overrides the error handler used for unhandled promise rejections.
+             * By default, errors are simply thrown, but you can do something different.
+             * @function Bloodhound.Promise.config.setErrorHandler
+             * @param handler {Function} A function which will be passed an Error instance.
+             * @example
+             * Promise.config.setErrorHandler(function log(err) {
+             *   console.log('an error occurred:', err);
+             * });
+             * @example
+             * // use Angular 1.x's error handler
+             * angular.module('app', ['ng'])
+             *   .run(['$exceptionHandler', function($err) {
+             *     Promise.config.setErrorHandler($err);
+             *   }]);
+             */
+            setErrorHandler: function setErrorHandler(handler) {
+                if (typeof handler !== 'function') {
+                    throw new TypeError('Parameter `handler` must be a function.');
+                }
+                errorHandler = handler;
             },
 
             /**
