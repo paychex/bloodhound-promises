@@ -717,7 +717,8 @@ define(['Promise'], function(Promise) {
 
             it('rejects after specified ms', function(done) {
                 Promise.delay(50).timeout(30).catch(function(reason) {
-                    expect(reason).toBe('timed out');
+                    expect(reason instanceof Error).toBe(true);
+                    expect(reason.message).toBe('Promise timed out.');
                     done();
                 });
             });

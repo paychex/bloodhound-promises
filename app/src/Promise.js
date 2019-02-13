@@ -477,11 +477,12 @@
          * @function Bloodhound.Promise#timeout
          * @param ms {Number} The number of milliseconds to wait
          *  before rejecting the promise.
-         * @param [reason='timed out'] {String} An optional
+         * @param [reason] {any} An optional
          *  rejection reason you can specify; if not provided,
-         *  'timed out' will be used.
-         * @returns {Promise} The same promise that `timeout`
-         *  was called on.
+         *  an Error will be used.
+         * @returns {Promise} A child promise that will reject
+         *  if the timeout elapses; otherwise, it will be resolved
+         *  or rejected when the original promise settles.
          * @example
          * Promise.delay(100, 'never resolved')
          *   .timeout(50, 'took too long')
@@ -490,10 +491,11 @@
          *   }).done();
          */
         Promise.prototype.timeout = function timeout(ms, reason) {
-            var reject = this._reject.bind(this, reason || 'timed out'),
-                token = setTimeout(reject, ms);
-            this.finally(clearTimeout.bind(null, token));
-            return this;
+            var promise = this;
+            return new Promise(function TimeoutPromise(resolve, reject) {
+                promise.then(resolve, reject);
+                setTimeout(reject, ms, reason || new Error('Promise timed out.'));
+            });
         };
 
         /**
