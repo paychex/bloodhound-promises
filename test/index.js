@@ -532,6 +532,19 @@ describe('Bloodhound', () => {
                 });
             });
 
+            it('invokes callbacks in order', done => {
+                const calls = [];
+                const promise = BloodhoundPromise.delay(10);
+                BloodhoundPromise.all([
+                    promise.then(() => calls.push(1)),
+                    promise.then(() => calls.push(2)),
+                    promise.then(() => calls.push(3)),
+                ]).then(() => {
+                    expect(calls).toEqual([1, 2, 3]);
+                    done();
+                });
+            });
+
         });
 
         describe('catch', () => {

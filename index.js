@@ -96,6 +96,14 @@ const readonly = value => ({
     get: constant(value),
 });
 
+function ensureSettlersArray(promise) {
+    if (has(promise, SETTLED)) return;
+    Object.defineProperty(promise, SETTLED, {
+        value: [],
+        configurable: true
+    });
+}
+
 function asTypeName(param) {
     return isString(param) ?
         param :
@@ -263,7 +271,8 @@ function wrapAsBloodhound(Promise) {
     const resolved = new Promise(resolver);
 
     function schedule(task, resolve, reject) {
-        return () => resolved.then(task).then(resolve, reject);
+        return () => resolved.then(() =>
+            resolve(task())).catch(reject);
     }
 
     /**
@@ -883,7 +892,7 @@ function wrapAsBloodhound(Promise) {
             if (promise.isSettled()) {
                 propagate();
             } else {
-                promise[SETTLED] = promise[SETTLED] || [];
+                ensureSettlersArray(promise);
                 promise[SETTLED].push(propagate);
             }
         });

@@ -3163,6 +3163,14 @@
     };
   };
 
+  function ensureSettlersArray(promise) {
+    if (has_1(promise, SETTLED)) return;
+    Object.defineProperty(promise, SETTLED, {
+      value: [],
+      configurable: true
+    });
+  }
+
   function asTypeName(param) {
     return isString_1(param) ? param : param.name;
   }
@@ -3319,7 +3327,9 @@
 
     function schedule(task, resolve, reject) {
       return function () {
-        return resolved.then(task).then(resolve, reject);
+        return resolved.then(function () {
+          return resolve(task());
+        }).catch(reject);
       };
     }
     /**
@@ -3955,7 +3965,7 @@
         if (promise.isSettled()) {
           propagate();
         } else {
-          promise[SETTLED] = promise[SETTLED] || [];
+          ensureSettlersArray(promise);
           promise[SETTLED].push(propagate);
         }
       });
