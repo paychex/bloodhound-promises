@@ -37,7 +37,7 @@ export default [{
     output: {
         format: 'umd',
         name: 'Bloodhound',
-        file: 'dist/boodhound.min.js'
+        file: 'dist/bloodhound.min.js'
     },
     external: [],
     plugins: [
