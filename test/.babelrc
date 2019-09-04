@@ -1,0 +1,14 @@
+{
+    "presets": [
+        [
+            "@babel/env",
+            {
+                "modules": "commonjs",
+                "targets": "node 7.6.0"
+            }
+        ]
+    ],
+    "plugins": [
+        "@babel/plugin-transform-modules-commonjs"
+    ]
+}

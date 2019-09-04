@@ -1,14 +1,10 @@
 {
   "name": "bloodhound-promises",
-  "version": "1.1.14",
-  "description": "Implementation of the Promise specification...with extra goodies.",
-  "main": "app/src/Promise.js",
-  "directories": {
-    "test": "test"
-  },
+  "version": "2.0.0",
+  "description": "Promises with extra features.",
+  "main": "index.js",
   "keywords": [
     "promise",
-    "async",
     "promises-aplus"
   ],
   "repository": {
@@ -21,31 +17,39 @@
   "author": "Paychex, Inc.",
   "license": "Apache-2.0",
   "devDependencies": {
-    "jsdoc": "^3.3.0-alpha10",
-    "karma": "^4.0.0",
-    "karma-cli": "0.0.4",
-    "karma-coverage": "^0.2.6",
-    "karma-jasmine": "^0.2.2",
-    "karma-junit-reporter": "^0.2.2",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "karma-requirejs": "^0.2.2",
-    "karma-story-reporter": "^0.2.2",
-    "promises-aplus-tests": "^2.1.0",
-    "requirejs": "^2.1.15"
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
+    "@babel/register": "^7.5.5",
+    "bluebird": "^3.5.5",
+    "docdash": "^1.1.1",
+    "expect": "^24.8.0",
+    "jsdoc": "^3.6.2",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
+    "promises-aplus-tests": "^2.1.2",
+    "q": "^1.5.1",
+    "rollup": "^1.17.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-uglify": "^6.0.3",
+    "when": "^3.7.8"
+  },
+  "engines": {
+    "node": ">= 7.6.0"
   },
   "scripts": {
-    "verify": "node ./node_modules/promises-aplus-tests/lib/cli.js test/adapter",
-    "prestart": "npm install",
-    "pretest": "npm install",
-    "test": "karma start karma.conf.js",
-    "test-single-run": "karma start karma.conf.js  --single-run",
-    "preupdate-webdriver": "npm install",
-    "doc": "./node_modules/.bin/jsdoc -d build/dev/doc -r -c ./jsdoc.conf.json -P ./package.json app/src"
+    "test": "mocha --file test/setup.js --recursive",
+    "test:coverage": "nyc --reporter=lcov mocha --file test/setup.js --recursive",
+    "verify": "promises-aplus-tests verify",
+    "docs": "jsdoc -c jsdoc.json",
+    "build": "rollup -c"
   },
-  "jscsConfig": {
-    "validateIndentation": 4,
-    "validateLineBreaks": "CRLF",
-    "safeContextKeyword": "self"
-  },
-  "private": false
+  "private": false,
+  "dependencies": {
+    "lodash": "^4.17.15"
+  }
 }

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>index - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/paychex/bloodhound-promises" target="_blank" class="menu-item" id="repository" >Source Code</a></h2><h3>Classes</h3><ul><li><a href="BloodhoundPromise.html">BloodhoundPromise</a><ul class='methods'><li data-type='method'><a href="BloodhoundPromise.html#.all">all</a></li><li data-type='method'><a href="BloodhoundPromise.html#.any">any</a></li><li data-type='method'><a href="BloodhoundPromise.html#.apply">apply</a></li><li data-type='method'><a href="BloodhoundPromise.html#.call">call</a></li><li data-type='method'><a href="BloodhoundPromise.html#.cast">cast</a></li><li data-type='method'><a href="BloodhoundPromise.html#.defer">defer</a></li><li data-type='method'><a href="BloodhoundPromise.html#.delay">delay</a></li><li data-type='method'><a href="BloodhoundPromise.html#.isPromise">isPromise</a></li><li data-type='method'><a href="BloodhoundPromise.html#.race">race</a></li><li data-type='method'><a href="BloodhoundPromise.html#.reject">reject</a></li><li data-type='method'><a href="BloodhoundPromise.html#.resolve">resolve</a></li><li data-type='method'><a href="BloodhoundPromise.html#.settle">settle</a></li><li data-type='method'><a href="BloodhoundPromise.html#.some">some</a></li><li data-type='method'><a href="BloodhoundPromise.html#.timeout">timeout</a></li><li data-type='method'><a href="BloodhoundPromise.html#.unwrap">unwrap</a></li><li data-type='method'><a href="BloodhoundPromise.html#catch">catch</a></li><li data-type='method'><a href="BloodhoundPromise.html#done">done</a></li><li data-type='method'><a href="BloodhoundPromise.html#finally">finally</a></li><li data-type='method'><a href="BloodhoundPromise.html#isRejected">isRejected</a></li><li data-type='method'><a href="BloodhoundPromise.html#isResolved">isResolved</a></li><li data-type='method'><a href="BloodhoundPromise.html#isSettled">isSettled</a></li><li data-type='method'><a href="BloodhoundPromise.html#notify">notify</a></li><li data-type='method'><a href="BloodhoundPromise.html#spread">spread</a></li><li data-type='method'><a href="BloodhoundPromise.html#tap">tap</a></li><li data-type='method'><a href="BloodhoundPromise.html#then">then</a></li><li data-type='method'><a href="BloodhoundPromise.html#timeout">timeout</a></li><li data-type='method'><a href="BloodhoundPromise.html#unwrap">unwrap</a></li><li data-type='method'><a href="BloodhoundPromise.html#value">value</a></li></ul></li></ul><h3>Modules</h3><ul><li><a href="module-index.html">index</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">index</h1>
+    
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+                <div class="description"><p>Wraps a Promise implementation to enable the following behaviors:</p>
+<p>Static Changes</p>
+<ul>
+<li><code>Promise.timeout</code> created.</li>
+<li><code>Promise.unwrap</code> created.</li>
+<li><code>Promise.apply/fapply</code> created.</li>
+<li><code>Promise.call/fcall/try/attempt</code> created.</li>
+<li><code>Promise.config.setErrorHandler</code> created.</li>
+<li><code>Promise.config.setAsyncNotifier</code> created.</li>
+<li>Promise constructor callback will be invoked with a 3rd &quot;notify&quot; function...which does nothing.</li>
+<li><code>Promise.defer.resolve</code> will reject the promise if an Error instance if provided.</li>
+<li><code>Promise.some</code> will accept an array or object and resolve with the same type.</li>
+<li><code>Promise.all</code> will accept an array or object and resolve with the same type.</li>
+<li><code>Promise.any</code> will accept an array or object and resolve with the same type.</li>
+<li><code>Promise.settle</code> will accept an array or object and resolve with the same type.</li>
+<li><code>Promise.resolve</code> will return a rejected promise if an Error instance is provided.</li>
+<li><code>Promise.cast/when</code> will return a rejected promise if an Error instance is provided.</li>
+<li><code>Promise.delay</code> will return a rejected promise if an Error instance is provided.</li>
+</ul>
+<p>Instance Changes</p>
+<ul>
+<li><code>promise.done</code> created.</li>
+<li><code>promise.spread</code> created.</li>
+<li><code>promise.timeout</code> created.</li>
+<li><code>promise.value/getValue</code> created.</li>
+<li><code>promise.isResolved</code> created.</li>
+<li><code>promise.isRejected</code> created.</li>
+<li><code>promise.isSettled</code> created.</li>
+<li><code>promise.unwrap</code> created.</li>
+<li><code>promise.then</code> will return a rejected promise if an Error instance is returned from a callback.</li>
+<li><code>promise.then</code> will invoke the handler registered using <code>Promise.config.setAsyncNotifier.</code></li>
+<li><code>promise.catch/else</code> will return a rejected promise if an Error instance is returned from a callback.</li>
+<li><code>promise.catch/else</code> can be passed an array of Error types to conditionally invoke the callback.</li>
+<li><code>promise.catch/else</code> will swallow a rejection if no callback is provided.</li>
+<li><code>Promise.tap</code> will not reject, even when a rejected promise is returned from the callback.</li>
+<li><code>Promise.finally</code> will pass the callback the resolved value or rejection reason.</li>
+</ul>
+<p>Assumptions:</p>
+<ul>
+<li>The wrapped Promise's constructor callback will be invoked synchronously.</li>
+</ul></div>
+            
+
+            
+                
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line255">line 255</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Examples</h5>
+    
+    <pre class="prettyprint"><code>import asBloodhound from 'bloodhound-promises';export const BloodhoundPromise = asBloodhound(Promise);</code></pre>
+
+    <pre class="prettyprint"><code>import Q from 'q';import asBloodhound from 'bloodhound-promises';export const BloodhoundPromise = asBloodhound(Q.Promise);</code></pre>
+
+    <pre class="prettyprint"><code>import when from 'when';import asBloodhound from 'bloodhound-promises';export const BloodhoundPromise = asBloodhound(when.promise);</code></pre>
+
+    <pre class="prettyprint"><code>import * as Bluebird from "bluebird";import asBloodhound from 'bloodhound-promises';export const BloodhoundPromise = asBloodhound(Bluebird.Promise);</code></pre>
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>Promise</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The Promise constructor to wrap.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A BloodhoundPromise constructor that uses the wrapped
+Promise's scheduler to implement advanced functionality.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="BloodhoundPromise.html">BloodhoundPromise</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+            
+        
+        </div>
+    
+
+    
+
+    
+
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Sep 04 2019 12:08:46 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+
+</body>
+</html>

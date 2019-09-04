@@ -1,5 +1,3 @@
-<B>How to contribute</B>
+# How to Contribute
 
-To get started, <a href="https://www.clahub.com/agreements/paychex/bloodhound-promises">sign the Contributor License Agreement</a>. 
-
-
+To get started, [sign the Contributor License Agreement](https://www.clahub.com/agreements/paychex/bloodhound-promises).
