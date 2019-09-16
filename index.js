@@ -1,6 +1,7 @@
 import has from 'lodash/has';
 import noop from 'lodash/noop';
 import size from 'lodash/size';
+import invoke from 'lodash/invoke';
 import attempt from 'lodash/attempt';
 import constant from 'lodash/constant';
 import flatten from 'lodash/flatten';
@@ -87,9 +88,9 @@ import toArray from 'lodash/toArray';
 const RESOLVED = 1;
 const REJECTED = 2;
 
-const STATE = 'Symbol' in global ? Symbol('STATE') : '_state';
-const VALUE = 'Symbol' in global ? Symbol('_value') : '_value';
-const SETTLED = 'Symbol' in global ? Symbol('SETTLED') : '_settled';
+const STATE = [invoke(global, 'Symbol', 'STATE'), '_state'].find(Boolean);
+const VALUE = [invoke(global, 'Symbol', '_value'), '_value'].find(Boolean);
+const SETTLED = [invoke(global, 'Symbol', 'SETTLED'), '_settled'].find(Boolean);
 
 const readonly = value => ({
     enumerable: false,
@@ -111,9 +112,11 @@ function asTypeName(param) {
 }
 
 function isErrorOrTypeName(param) {
-    return isString(param) ||
+    return !!param && (
+        isString(param) ||
         param === Error ||
-        isError(param.prototype);
+        isError(param.prototype)
+    );
 }
 
 function isInstanceOfTypeName(typename) {

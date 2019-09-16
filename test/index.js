@@ -626,6 +626,15 @@ describe('Bloodhound', () => {
                         .catch(() => expect.fail('should not be called'));
                 });
 
+                it('ignores invalid arguments', done => {
+                    const err = new Error();
+                    BloodhoundPromise.reject(err)
+                        .catch(null, undefined, NaN, 123, /rx/, {}, reason => {
+                            expect(reason).toBe(err);
+                            done();
+                        });
+                });
+
             });
 
         });

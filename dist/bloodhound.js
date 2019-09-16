@@ -1855,6 +1855,121 @@
   var _apply = apply;
 
   /**
+   * Gets the last element of `array`.
+   *
+   * @static
+   * @memberOf _
+   * @since 0.1.0
+   * @category Array
+   * @param {Array} array The array to query.
+   * @returns {*} Returns the last element of `array`.
+   * @example
+   *
+   * _.last([1, 2, 3]);
+   * // => 3
+   */
+  function last(array) {
+    var length = array == null ? 0 : array.length;
+    return length ? array[length - 1] : undefined;
+  }
+
+  var last_1 = last;
+
+  /**
+   * The base implementation of `_.get` without support for default values.
+   *
+   * @private
+   * @param {Object} object The object to query.
+   * @param {Array|string} path The path of the property to get.
+   * @returns {*} Returns the resolved value.
+   */
+
+  function baseGet(object, path) {
+    path = _castPath(path, object);
+    var index = 0,
+        length = path.length;
+
+    while (object != null && index < length) {
+      object = object[_toKey(path[index++])];
+    }
+
+    return index && index == length ? object : undefined;
+  }
+
+  var _baseGet = baseGet;
+
+  /**
+   * The base implementation of `_.slice` without an iteratee call guard.
+   *
+   * @private
+   * @param {Array} array The array to slice.
+   * @param {number} [start=0] The start position.
+   * @param {number} [end=array.length] The end position.
+   * @returns {Array} Returns the slice of `array`.
+   */
+  function baseSlice(array, start, end) {
+    var index = -1,
+        length = array.length;
+
+    if (start < 0) {
+      start = -start > length ? 0 : length + start;
+    }
+
+    end = end > length ? length : end;
+
+    if (end < 0) {
+      end += length;
+    }
+
+    length = start > end ? 0 : end - start >>> 0;
+    start >>>= 0;
+    var result = Array(length);
+
+    while (++index < length) {
+      result[index] = array[index + start];
+    }
+
+    return result;
+  }
+
+  var _baseSlice = baseSlice;
+
+  /**
+   * Gets the parent value at `path` of `object`.
+   *
+   * @private
+   * @param {Object} object The object to query.
+   * @param {Array} path The path to get the parent value of.
+   * @returns {*} Returns the parent value.
+   */
+
+  function parent(object, path) {
+    return path.length < 2 ? object : _baseGet(object, _baseSlice(path, 0, -1));
+  }
+
+  var _parent = parent;
+
+  /**
+   * The base implementation of `_.invoke` without support for individual
+   * method arguments.
+   *
+   * @private
+   * @param {Object} object The object to query.
+   * @param {Array|string} path The path of the method to invoke.
+   * @param {Array} args The arguments to invoke the method with.
+   * @returns {*} Returns the result of the invoked method.
+   */
+
+  function baseInvoke(object, path, args) {
+    path = _castPath(path, object);
+    object = _parent(object, path);
+    var func = object == null ? object : object[_toKey(last_1(path))];
+    return func == null ? undefined : _apply(func, object, args);
+  }
+
+  var _baseInvoke = baseInvoke;
+
+  /**
    * This method returns the first argument it receives.
    *
    * @static
@@ -2035,6 +2150,28 @@
   }
 
   var _baseRest = baseRest;
+
+  /**
+   * Invokes the method at `path` of `object`.
+   *
+   * @static
+   * @memberOf _
+   * @since 4.0.0
+   * @category Object
+   * @param {Object} object The object to query.
+   * @param {Array|string} path The path of the method to invoke.
+   * @param {...*} [args] The arguments to invoke the method with.
+   * @returns {*} Returns the result of the invoked method.
+   * @example
+   *
+   * var object = { 'a': [{ 'b': { 'c': [1, 2, 3, 4] } }] };
+   *
+   * _.invoke(object, 'a[0].b.c.slice', 1, 3);
+   * // => [2, 3]
+   */
+
+  var invoke = _baseRest(_baseInvoke);
+  var invoke_1 = invoke;
 
   /** Built-in value references. */
 
@@ -3152,9 +3289,9 @@
 
   var RESOLVED = 1;
   var REJECTED = 2;
-  var STATE = 'Symbol' in global$1 ? Symbol('STATE') : '_state';
-  var VALUE = 'Symbol' in global$1 ? Symbol('_value') : '_value';
-  var SETTLED = 'Symbol' in global$1 ? Symbol('SETTLED') : '_settled';
+  var STATE = [invoke_1(global$1, 'Symbol', 'STATE'), '_state'].find(Boolean);
+  var VALUE = [invoke_1(global$1, 'Symbol', '_value'), '_value'].find(Boolean);
+  var SETTLED = [invoke_1(global$1, 'Symbol', 'SETTLED'), '_settled'].find(Boolean);
 
   var readonly = function readonly(value) {
     return {
@@ -3176,7 +3313,7 @@
   }
 
   function isErrorOrTypeName(param) {
-    return isString_1(param) || param === Error || isError_1(param.prototype);
+    return !!param && (isString_1(param) || param === Error || isError_1(param.prototype));
   }
 
   function isInstanceOfTypeName(typename) {
