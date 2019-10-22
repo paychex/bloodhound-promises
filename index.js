@@ -65,7 +65,7 @@ import toArray from 'lodash/toArray';
 /**
  * Registers a callback to invoke when the
  * wrapped Promise's scheduler is used (e.g. when invoking success and failure handlers
- * passed to `.then(...)`).
+ * passed to `.then(…)`).
  *
  * @global
  * @callback SetAsyncNotifier
@@ -79,7 +79,7 @@ import toArray from 'lodash/toArray';
  * @typedef {Object} Config
  * @property {SetAsyncNotifier} setAsyncNotifier Registers a callback to invoke when the
  * wrapped Promise's scheduler is used (e.g. when invoking success and failure handlers
- * passed to `.then(...)`).
+ * passed to `.then(…)`).
  * @property {SetErrorHandler} setErrorHandler Registers a callback to invoke when `done()`
  * is called on a rejected promise chain. The handler will be invoked with the rejection
  * reason.
@@ -207,7 +207,7 @@ function RESOLVER(promise, resolve, reject, x) {
  * - `Promise.call/fcall/try/attempt` created.
  * - `Promise.config.setErrorHandler` created.
  * - `Promise.config.setAsyncNotifier` created.
- * - Promise constructor callback will be invoked with a 3rd "notify" function...which does nothing.
+ * - Promise constructor callback will be invoked with a 3rd "notify" function…which does nothing.
  * - `Promise.defer.resolve` will reject the promise if an Error instance if provided.
  * - `Promise.some` will accept an array or object and resolve with the same type.
  * - `Promise.all` will accept an array or object and resolve with the same type.
@@ -336,15 +336,16 @@ function wrapAsBloodhound(Promise) {
      * @returns {BloodhoundPromise} A new promise instance resolved with the given value.
      * @example
      * BloodhoundPromise.resolve(123);
-     * BloodhoundPromise.resolve(someOtherPromise).then(...);
-     * BloodhoundPromise.resolve(new Error('rejection reason')).catch(...);
+     * BloodhoundPromise.resolve(someOtherPromise).then(…);
+     * BloodhoundPromise.resolve(new Error('rejection reason')).catch(…);
      */
     BloodhoundPromise.resolve = function resolve(value) {
         return new BloodhoundPromise((resolve) => resolve(value));
     };
 
     /**
-     * Creates a new BloodhoundPromise rejected with the given reason.
+     * Creates a new BloodhoundPromise rejected with the given reason. Best practice is to
+     * always reject your Promises with an Error instance, not a string or `undefined`.
      *
      * @function BloodhoundPromise.reject
      * @param {any} error The reason the promise is rejected.
@@ -362,10 +363,13 @@ function wrapAsBloodhound(Promise) {
      *
      * @function BloodhoundPromise.defer
      * @returns {Defer} A new Defer instance.
+     * @deprecated The Defer pattern breaks encapsulation and divides responsibility, and so
+     * should be avoided. Instead, use the normal Promise constructor callback pattern.
      * @example
+     * // WARNING: deprecated
      * const defer = BloodhoundPromise.defer();
-     * setTimeout(() => defer.resolve(123));
-     * defer.promise.then(...);
+     * setTimeout(() => defer.resolve('abc'), 10);
+     * defer.promise.then(…);
      */
     BloodhoundPromise.defer = function defer() {
         const result = {};
@@ -389,7 +393,7 @@ function wrapAsBloodhound(Promise) {
      * @param {any} [error] The optional value to reject the promise with if the time period elapsed before the given promise settles.
      * @returns {BloodhoundPromise} A new promise instance.
      * @example
-     * BloodhoundPromise.timeout(somePromise, 10000).catch(...);
+     * BloodhoundPromise.timeout(somePromise, 10000).catch(…);
      * BloodhoundPromise.timeout(somePromise, 500, new Error('operation timed out'));
      */
     BloodhoundPromise.timeout = function timeout(promise, ms, error) {
@@ -412,8 +416,8 @@ function wrapAsBloodhound(Promise) {
      * function divide(arg1, arg2) {
      *   return arg1 / arg2;
      * }
-     * BloodhoundPromise.apply(divide, [50, 10]).then(...);
-     * BloodhoundPromise.apply(divide, [50, 0]).catch(...); // division by zero
+     * BloodhoundPromise.apply(divide, [50, 10]).then(…);
+     * BloodhoundPromise.apply(divide, [50, 0]).catch(…); // division by zero
      */
     BloodhoundPromise.apply =
     BloodhoundPromise.fapply = function apply(fn, args) {
@@ -436,8 +440,8 @@ function wrapAsBloodhound(Promise) {
      * function divide(arg1, arg2) {
      *   return arg1 / arg2;
      * }
-     * BloodhoundPromise.call(divide, 50, 10).then(...);
-     * BloodhoundPromise.call(divide, 50, 0).catch(...); // division by zero
+     * BloodhoundPromise.call(divide, 50, 10).then(…);
+     * BloodhoundPromise.call(divide, 50, 0).catch(…); // division by zero
      */
     BloodhoundPromise.call =
     BloodhoundPromise.fcall =
@@ -458,8 +462,8 @@ function wrapAsBloodhound(Promise) {
      * the returned promise will be rejected with that reason.
      * @returns {BloodhoundPromise} A new promise instance.
      * @example
-     * BloodhoundPromise.cast(123).then(...);
-     * BloodhoundPromise.cast(anotherPromise).then(..., ...);
+     * BloodhoundPromise.cast(123).then(…);
+     * BloodhoundPromise.cast(anotherPromise).then(…, …);
      */
     BloodhoundPromise.cast =
     BloodhoundPromise.when = function cast(value) {
@@ -494,7 +498,7 @@ function wrapAsBloodhound(Promise) {
      * BloodhoundPromise.race([
      *     someAsyncOperation(),
      *     BloodhoundPromise.delay(10000, new Error('operation timed out'))
-     * ]).then(..., ...);
+     * ]).then(…, …);
      */
     BloodhoundPromise.race = Promise.race;
 
@@ -508,8 +512,8 @@ function wrapAsBloodhound(Promise) {
      * @param {any} result The value to settle the promise with.
      * @returns {BloodhoundPromise} A new promise instance.
      * @example
-     * BloodhoundPromise.delay(1000, 'async value').then(...);
-     * BloodhoundPromise.delay(1000, new Error('rejected')).catch(...);
+     * BloodhoundPromise.delay(1000, 'async value').then(…);
+     * BloodhoundPromise.delay(1000, new Error('rejected')).catch(…);
      */
     BloodhoundPromise.delay = function delay(ms, result) {
         const defer = BloodhoundPromise.defer();
@@ -518,8 +522,8 @@ function wrapAsBloodhound(Promise) {
     };
 
     /**
-     * Resolves the returned promise when all the given promises either
-     * resolve or reject.
+     * Resolves the returned promise when all the given promises settle
+     * (resolved _or_ rejected).
      *
      * @function BloodhoundPromise.settle
      * @alias BloodhoundPromise.hash
@@ -528,7 +532,10 @@ function wrapAsBloodhound(Promise) {
      * @returns {BloodhoundPromise<array|object>} A new promise instance resolved
      * with an array of promises if an iterable was provided.or an object if an
      * object or Map was provided. The object's keys will be the keys in
-     * the original object; the values will be the promises.
+     * the original object and the values will be the promises. To determine the
+     * state of the Promise instance use {@link BloodhoundPromise#isResolved isResolved()}
+     * or {@link BloodhoundPromise#isRejected isRejected()}. To get the rejection
+     * reason or resolved value, use {@link BloodhoundPromise#value value()}.
      * @example
      * BloodhoundPromise.hash({
      *   a: someAsyncOperation(),
@@ -594,13 +601,13 @@ function wrapAsBloodhound(Promise) {
      *   a: someAsyncOperation(),
      *   b: BloodhoundPromise.delay(1000, 'default'),
      *   c: BloodhoundPromise.reject(new Error())
-     * }, 2).then(console.log); // { a: ..., b: 'default' }
+     * }, 2).then(console.log); // { a: …, b: 'default' }
      * @example
      * BloodhoundPromise.some([
      *   someAsyncOperation(),
      *   BloodhoundPromise.delay(1000, 'default'),
      *   BloodhoundPromise.reject(new Error())
-     * ], 2).then(console.log); // [ ..., 'default' ]
+     * ], 2).then(console.log); // [ …, 'default' ]
      */
     BloodhoundPromise.some = function some(promises, count) {
 
@@ -657,7 +664,8 @@ function wrapAsBloodhound(Promise) {
      * @returns {BloodhoundPromise<array|object>} A new promise resolved with an array of
      * resolved values if an iterable was provided or an object if an object or Map was
      * provided. The object's keys will be the keys in the original object and the values
-     * will be the resolved values.
+     * will be the resolved values. If _any_ of the promises rejects, the rejection handler
+     * will be invoked with the first rejection reason.
      * @example
      * BloodhoundPromise.all({
      *   a: someAsyncOperation(),
@@ -668,7 +676,12 @@ function wrapAsBloodhound(Promise) {
      * BloodhoundPromise.all([
      *   someAsyncOperation(),
      *   BloodhoundPromise.delay(1000, 'default')
-     * ]).then(console.log); // [ ..., 'default' ]
+     * ]).then(console.log); // [ …, 'default' ]
+     * @example
+     * BloodhoundPromise.all([
+     *   'abc',
+     *   new Error(123)
+     * ]).catch(console.error); // <Error: 123>
      */
     BloodhoundPromise.all = function all(promises) {
         return BloodhoundPromise.some(promises, size(promises));
@@ -681,8 +694,10 @@ function wrapAsBloodhound(Promise) {
      * @param {Iterable|Map|object} promises The promises to wait for one to resolve.
      * @returns {BloodhoundPromise<array|object>} A new promise resolved with an array containing
      * the first resolved value if an iterable was provided or an object if an object or
-     * Map was provided. The object's 1 key will be the key of the first resolved promise in
-     * the original object and the value will be that first resolved value.
+     * Map was provided. The object's only key will be the key of the first resolved promise in
+     * the original object and the value will be that first resolved value. If _all_ of the
+     * promises reject, the rejection handler will be invoked with an array of all the rejection
+     * reasons.
      * @example
      * BloodhoundPromise.any({
      *   a: someAsyncOperation(),
@@ -695,6 +710,11 @@ function wrapAsBloodhound(Promise) {
      *   BloodhoundPromise.delay(1000, 'default'),
      *   BloodhoundPromise.reject(new Error())
      * ]).then(console.log); // [ 'default' ]
+     * @example
+     * BloodhoundPromise.any([
+     *   new Error(123),
+     *   BloodhoundPromise.reject('abc')
+     * ]).catch(console.error); // [<Error: 123>, 'abc']
      */
     BloodhoundPromise.any = function any(promises) {
         return BloodhoundPromise.some(promises, 1);
@@ -708,7 +728,7 @@ function wrapAsBloodhound(Promise) {
      * @returns {function(new:Promise)} The original Promise constructor.
      * @example
      * const Promise = BloodhoundPromise.unwrap();
-     * return new Promise((resolve, reject) => { ... });
+     * return new Promise((resolve, reject) => { … });
      */
     BloodhoundPromise.unwrap = function unwrap() {
         return Promise;
@@ -747,9 +767,12 @@ function wrapAsBloodhound(Promise) {
      *
      * @function BloodhoundPromise.prototype.value
      * @alias BloodhoundPromise.prototype.getValue
-     * @returns {any} The resolved value or rejection reason.
+     * @returns {any} The resolved value or rejection reason. If the Promise has
+     * not been settled, returns `undefined`.
      * @example
      * BloodhoundPromise.resolve(123).value(); // 123
+     * BloodhoundPromise.delay(10, 123).value(); // undefined (not yet settled)
+     * BloodhoundPromise.reject(new Error('oops')).value(); // <Error: oops>
      */
     BloodhoundPromise.prototype.value =
     BloodhoundPromise.prototype.getValue = function getValue() {
@@ -827,7 +850,7 @@ function wrapAsBloodhound(Promise) {
      * @example
      * BloodhoundPromise.call(someMethod)
      *   .then(handleResult)
-     *   .done((valueOrError) => { ... });
+     *   .done((valueOrError) => { … });
      */
     BloodhoundPromise.prototype.done = function done(callback) {
         this.then(callback, function unhandledRejection(error) {
@@ -851,8 +874,8 @@ function wrapAsBloodhound(Promise) {
      * @example
      * BloodhoundPromise.call(someMethod, 'arg')
      *   .timeout(10000, new Error('operation timed out'))
-     *   .then(...);
-     *   .catch(...);
+     *   .then(…);
+     *   .catch(…);
      */
     BloodhoundPromise.prototype.timeout = function timeout(ms, error) {
         return BloodhoundPromise.timeout(this, ms, error);
@@ -862,9 +885,9 @@ function wrapAsBloodhound(Promise) {
      * Invokes one of the specified callbacks when the promise settles.
      *
      * @function BloodhoundPromise.prototype.then
-     * @param {function} onFulfilled Method to invoke when the promise resolves.
+     * @param {function} [onFulfilled] Method to invoke when the promise resolves.
      * Will be passed the resolved value.
-     * @param {function} onRejected Method to invoke when the promise rejects.
+     * @param {function} [onRejected] Method to invoke when the promise rejects.
      * Will be passed the rejection reason.
      * @returns {BloodhoundPromise} A new promise.
      * @example
@@ -912,7 +935,7 @@ function wrapAsBloodhound(Promise) {
      * @param {...string[]} [types] The error type names to match against the
      * rejection reason in order for the callback to be invoked. If not provided,
      * the callback will always be invoked when the promise is rejected.
-     * @param {function} onRejected Method to invoke when the promise rejects. If
+     * @param {function} [onRejected] Method to invoke when the promise rejects. If
      * one or more Error type names has been specified, the callback will only be
      * invoked if the rejection reason matches the given Error type name.
      * @returns {BloodhoundPromise} A new promise.
@@ -934,14 +957,14 @@ function wrapAsBloodhound(Promise) {
     };
 
     /**
-     * Invokes the specified callback only if the promise resolves. If the
-     * callback returns a promise, the promise chain will wait for that promise
-     * to settle, but neither a fulfillment nor a rejection will be propagated
-     * to the next promise in the chain. Instead, the original resolved value
+     * Used for side effects. Invokes the specified callback only if the promise
+     * resolves. If the callback returns a promise, the promise chain will wait
+     * for that promise to settle but **will not** propagate the settled value
+     * to the next promise in the chain. Instead, the _original_ resolved value
      * will always be propagated.
      *
      * @function BloodhoundPromise.prototype.tap
-     * @param {function} callback The method to invoke when the promise resolves.
+     * @param {function} [callback] The method to invoke when the promise resolves.
      * Will be passed the resolved value. Nothing this callback does will affect
      * the next promise in the chain, which will always be provided with the
      * original resolved value.
@@ -949,7 +972,7 @@ function wrapAsBloodhound(Promise) {
      * @example
      * BloodhoundPromise.call(someMethod, 'arg')
      *   .tap(result => log.info('method succeeded', result))
-     *   .then(result => { ... });
+     *   .then(result => { … });
      */
     BloodhoundPromise.prototype.tap = function tap(callback) {
         return !isFunction(callback) ?
@@ -967,7 +990,7 @@ function wrapAsBloodhound(Promise) {
      * argument.
      *
      * @function BloodhoundPromise.prototype.spread
-     * @param {function} callback Method to invoke with the array of resolved
+     * @param {function} [callback] Method to invoke with the array of resolved
      * values passed in as arguments.
      * @returns {BloodhoundPromise} A new promise.
      * @example
@@ -975,7 +998,7 @@ function wrapAsBloodhound(Promise) {
      *   'value for arg 1',
      *   BloodhoundPromise.call(getValueForArg2),
      *   BloodhoundPromise.resolve(getValueForArg3()),
-     * ]).spread((arg1, arg2, arg3) => { ... });
+     * ]).spread((arg1, arg2, arg3) => { … });
      */
     BloodhoundPromise.prototype.spread = function spread(callback) {
         return !isFunction(callback) ?
@@ -994,13 +1017,13 @@ function wrapAsBloodhound(Promise) {
      *
      * @function BloodhoundPromise.prototype.finally
      * @alias BloodhoundPromise.prototype.lastly
-     * @param {function} callback Method to invoke when the promise settles.
+     * @param {function} [callback] Method to invoke when the promise settles.
      * The method will be passed the resolved value or rejection reason.
      * @returns {BloodhoundPromise} A new promise.
      * @example
      * ui.showLoading(true);
      * BloodhoundPromise.call(someMethod)
-     *   .then(...)
+     *   .then(…)
      *   .finally(() => ui.showLoading(false));
      */
     BloodhoundPromise.prototype.lastly =

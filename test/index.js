@@ -223,6 +223,9 @@ describe('Bloodhound', () => {
 
         describe('all', () => {
 
+            const err1 = new Error(1);
+            const err2 = new Error(2);
+
             it('calls some with length of array', done => {
                 const input = [1, 2, 3];
                 BloodhoundPromise.some = (object, count) => {
@@ -243,9 +246,41 @@ describe('Bloodhound', () => {
                 BloodhoundPromise.all(input);
             });
 
+            [
+                {
+                    type: 'array',
+                    arg: [
+                        err1,
+                        err2,
+                        'abc',
+                    ]
+                },
+                {
+                    type: 'object',
+                    arg: {
+                        a: err1,
+                        b: err2,
+                        c: 'abc',
+                    }
+                }
+            ].forEach(({ type, arg }) => {
+
+                it(`rejects with first reason if any ${type} promises reject`, done => {
+                    BloodhoundPromise.all(arg).catch(result => {
+                        expect(result).toEqual(err1);
+                        done();
+                    })
+                });
+
+            });
+
         });
 
         describe('any', () => {
+
+            const err1 = new Error(1);
+            const err2 = new Error(2);
+            const err3 = new Error(3);
 
             it('calls some with count 1', done => {
                 let callCount = 0;
@@ -256,6 +291,34 @@ describe('Bloodhound', () => {
                 };
                 BloodhoundPromise.any(array);
                 BloodhoundPromise.any(object);
+            });
+
+            [
+                {
+                    type: 'array',
+                    arg: [
+                        err1,
+                        err2,
+                        err3,
+                    ]
+                },
+                {
+                    type: 'object',
+                    arg: {
+                        a: err1,
+                        b: err2,
+                        c: err3,
+                    }
+                }
+            ].forEach(({ type, arg }) => {
+
+                it(`rejects with array of reasons if all ${type} promises reject`, done => {
+                    BloodhoundPromise.any(arg).catch(result => {
+                        expect(result).toEqual([err1, err2, err3]);
+                        done();
+                    })
+                });
+
             });
 
         });

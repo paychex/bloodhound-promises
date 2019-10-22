@@ -113,7 +113,7 @@ BloodhoundPromise.all([
 
 What does the code do? Both `loadMessages` and `loadAppData` return a promise that will resolve once their data calls complete. Because the promises are being returned, we do not call `done()` -- after all, we need these promises for our call to `BloodhoundPromise.all`, so we can't end the chain just yet.
 
-then, we wrap our promises in a call to `BloodhoundPromise.all`, a static method that returns a promise which is only resolved if all child promises resolve.
+Then, we wrap our promises in a call to `BloodhoundPromise.all`, a static method that returns a promise which is only resolved if all child promises resolve.
 
 Finally, we call `done()`, which waits until the promise is either resolved or rejected to check for unhandled exceptions. If one of our data calls failed, an error will be thrown at this point. Otherwise, the error might be swallowed.
 
@@ -136,8 +136,8 @@ BloodhoundPromise.config.setErrorHandler(function handler(reason) {
 Sometimes you want to know that an asynchronous operation has occurred so you can perform change detection. Frameworks like AngularJS need this information to ensure that bindings are updated correctly.
 
 ```javascript
-angular.module('myapp', [])
-    .run(['$rootScope', function($rootScope) {
+angular.module('myapp', ['ng'])
+    .run(['$rootScope', function checkForChanges($rootScope) {
         function checkChanges() {
             $rootScope.$applyAsync();
         }

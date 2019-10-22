@@ -73,7 +73,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line278">line 278</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -231,7 +231,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line714">line 714</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line737">line 737</a>
     </li></ul></dd>
     
 
@@ -321,7 +321,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line649">line 649</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line659">line 659</a>
     </li></ul></dd>
     
 
@@ -376,7 +376,9 @@
     
     <pre class="prettyprint"><code>BloodhoundPromise.all({  a: someAsyncOperation(),  b: BloodhoundPromise.delay(1000, 'default'),  c: BloodhoundPromise.reject(new Error('oops'))}).catch(console.log); // &lt;Error: oops></code></pre>
 
-    <pre class="prettyprint"><code>BloodhoundPromise.all([  someAsyncOperation(),  BloodhoundPromise.delay(1000, 'default')]).then(console.log); // [ ..., 'default' ]</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.all([  someAsyncOperation(),  BloodhoundPromise.delay(1000, 'default')]).then(console.log); // [ …, 'default' ]</code></pre>
+
+    <pre class="prettyprint"><code>BloodhoundPromise.all([  'abc',  new Error(123)]).catch(console.error); // &lt;Error: 123></code></pre>
 
 
 
@@ -457,7 +459,8 @@
     <p>A new promise resolved with an array of
 resolved values if an iterable was provided or an object if an object or Map was
 provided. The object's keys will be the keys in the original object and the values
-will be the resolved values.</p>
+will be the resolved values. If <em>any</em> of the promises rejects, the rejection handler
+will be invoked with the first rejection reason.</p>
 </div>
 
 
@@ -495,7 +498,7 @@ will be the resolved values.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line674">line 674</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line690">line 690</a>
     </li></ul></dd>
     
 
@@ -551,6 +554,8 @@ will be the resolved values.</p>
     <pre class="prettyprint"><code>BloodhoundPromise.any({  a: someAsyncOperation(),  b: BloodhoundPromise.delay(1000, 'default'),  c: BloodhoundPromise.reject(new Error())}).then(console.log); // { b: 'default' }</code></pre>
 
     <pre class="prettyprint"><code>BloodhoundPromise.any([  someAsyncOperation(),  BloodhoundPromise.delay(1000, 'default'),  BloodhoundPromise.reject(new Error())]).then(console.log); // [ 'default' ]</code></pre>
+
+    <pre class="prettyprint"><code>BloodhoundPromise.any([  new Error(123),  BloodhoundPromise.reject('abc')]).catch(console.error); // [&lt;Error: 123>, 'abc']</code></pre>
 
 
 
@@ -630,8 +635,10 @@ will be the resolved values.</p>
 <div class="param-desc">
     <p>A new promise resolved with an array containing
 the first resolved value if an iterable was provided or an object if an object or
-Map was provided. The object's 1 key will be the key of the first resolved promise in
-the original object and the value will be that first resolved value.</p>
+Map was provided. The object's only key will be the key of the first resolved promise in
+the original object and the value will be that first resolved value. If <em>all</em> of the
+promises reject, the rejection handler will be invoked with an array of all the rejection
+reasons.</p>
 </div>
 
 
@@ -669,7 +676,7 @@ the original object and the value will be that first resolved value.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line399">line 399</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line406">line 406</a>
     </li></ul></dd>
     
 
@@ -723,7 +730,7 @@ be rejected if an Error is thrown while invoking the function.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>function divide(arg1, arg2) {  return arg1 / arg2;}BloodhoundPromise.apply(divide, [50, 10]).then(...);BloodhoundPromise.apply(divide, [50, 0]).catch(...); // division by zero</code></pre>
+    <pre class="prettyprint"><code>function divide(arg1, arg2) {  return arg1 / arg2;}BloodhoundPromise.apply(divide, [50, 10]).then(…);BloodhoundPromise.apply(divide, [50, 0]).catch(…); // division by zero</code></pre>
 
 
 
@@ -856,7 +863,7 @@ be rejected if an Error is thrown while invoking the function.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line421">line 421</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line428">line 428</a>
     </li></ul></dd>
     
 
@@ -910,7 +917,7 @@ be rejected if an error is thrown while invoking the function.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>function divide(arg1, arg2) {  return arg1 / arg2;}BloodhoundPromise.call(divide, 50, 10).then(...);BloodhoundPromise.call(divide, 50, 0).catch(...); // division by zero</code></pre>
+    <pre class="prettyprint"><code>function divide(arg1, arg2) {  return arg1 / arg2;}BloodhoundPromise.call(divide, 50, 10).then(…);BloodhoundPromise.call(divide, 50, 0).catch(…); // division by zero</code></pre>
 
 
 
@@ -1063,7 +1070,7 @@ be rejected if an error is thrown while invoking the function.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line447">line 447</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line454">line 454</a>
     </li></ul></dd>
     
 
@@ -1116,7 +1123,7 @@ be rejected if an error is thrown while invoking the function.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.cast(123).then(...);BloodhoundPromise.cast(anotherPromise).then(..., ...);</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.cast(123).then(…);BloodhoundPromise.cast(anotherPromise).then(…, …);</code></pre>
 
 
 
@@ -1229,7 +1236,7 @@ the returned promise will be rejected with that reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line356">line 356</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line360">line 360</a>
     </li></ul></dd>
     
 
@@ -1247,6 +1254,8 @@ the returned promise will be rejected with that reason.</p></td>
 
     
 
+    
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>The Defer pattern breaks encapsulation and divides responsibility, and soshould be avoided. Instead, use the normal Promise constructor callback pattern.</li></ul></dd>
     
 
     
@@ -1283,7 +1292,7 @@ methods to use to resolve or reject that promise later.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>const defer = BloodhoundPromise.defer();setTimeout(() => defer.resolve(123));defer.promise.then(...);</code></pre>
+    <pre class="prettyprint"><code>// WARNING: deprecatedconst defer = BloodhoundPromise.defer();setTimeout(() => defer.resolve('abc'), 10);defer.promise.then(…);</code></pre>
 
 
 
@@ -1344,7 +1353,7 @@ methods to use to resolve or reject that promise later.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line498">line 498</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line505">line 505</a>
     </li></ul></dd>
     
 
@@ -1399,7 +1408,7 @@ the returned promise will wait for the given promise to settled and match its st
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.delay(1000, 'async value').then(...);BloodhoundPromise.delay(1000, new Error('rejected')).catch(...);</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.delay(1000, 'async value').then(…);BloodhoundPromise.delay(1000, new Error('rejected')).catch(…);</code></pre>
 
 
 
@@ -1532,7 +1541,7 @@ the returned promise will wait for the given promise to settled and match its st
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line466">line 466</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line473">line 473</a>
     </li></ul></dd>
     
 
@@ -1695,7 +1704,7 @@ the returned promise will wait for the given promise to settled and match its st
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line491">line 491</a>
     </li></ul></dd>
     
 
@@ -1748,7 +1757,7 @@ the returned promise will wait for the given promise to settled and match its st
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.race([    someAsyncOperation(),    BloodhoundPromise.delay(10000, new Error('operation timed out'))]).then(..., ...);</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.race([    someAsyncOperation(),    BloodhoundPromise.delay(10000, new Error('operation timed out'))]).then(…, …);</code></pre>
 
 
 
@@ -1858,7 +1867,7 @@ the returned promise will wait for the given promise to settled and match its st
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line343">line 343</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line346">line 346</a>
     </li></ul></dd>
     
 
@@ -1898,7 +1907,8 @@ the returned promise will wait for the given promise to settled and match its st
 
 
 <div class="description">
-    <p>Creates a new BloodhoundPromise rejected with the given reason.</p>
+    <p>Creates a new BloodhoundPromise rejected with the given reason. Best practice is to
+always reject your Promises with an Error instance, not a string or <code>undefined</code>.</p>
 </div>
 
 
@@ -2021,7 +2031,7 @@ the returned promise will wait for the given promise to settled and match its st
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line327">line 327</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line330">line 330</a>
     </li></ul></dd>
     
 
@@ -2075,7 +2085,7 @@ is provided, the returned promise will be rejected.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.resolve(123);BloodhoundPromise.resolve(someOtherPromise).then(...);BloodhoundPromise.resolve(new Error('rejection reason')).catch(...);</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.resolve(123);BloodhoundPromise.resolve(someOtherPromise).then(…);BloodhoundPromise.resolve(new Error('rejection reason')).catch(…);</code></pre>
 
 
 
@@ -2185,7 +2195,7 @@ is provided, the returned promise will be rejected.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line517">line 517</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line524">line 524</a>
     </li></ul></dd>
     
 
@@ -2225,8 +2235,8 @@ is provided, the returned promise will be rejected.</p>
 
 
 <div class="description">
-    <p>Resolves the returned promise when all the given promises either
-resolve or reject.</p>
+    <p>Resolves the returned promise when all the given promises settle
+(resolved <em>or</em> rejected).</p>
 </div>
 
 
@@ -2322,7 +2332,10 @@ resolve or reject.</p>
     <p>A new promise instance resolved
 with an array of promises if an iterable was provided.or an object if an
 object or Map was provided. The object's keys will be the keys in
-the original object; the values will be the promises.</p>
+the original object and the values will be the promises. To determine the
+state of the Promise instance use <a href="BloodhoundPromise.html#isResolved">isResolved()</a>
+or <a href="BloodhoundPromise.html#isRejected">isRejected()</a>. To get the rejection
+reason or resolved value, use <a href="BloodhoundPromise.html#value">value()</a>.</p>
 </div>
 
 
@@ -2360,7 +2373,7 @@ the original object; the values will be the promises.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line575">line 575</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line585">line 585</a>
     </li></ul></dd>
     
 
@@ -2416,9 +2429,9 @@ be rejected.</p>
 
     <h5>Examples</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.some({  a: someAsyncOperation(),  b: BloodhoundPromise.delay(1000, 'default'),  c: BloodhoundPromise.reject(new Error())}, 2).then(console.log); // { a: ..., b: 'default' }</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.some({  a: someAsyncOperation(),  b: BloodhoundPromise.delay(1000, 'default'),  c: BloodhoundPromise.reject(new Error())}, 2).then(console.log); // { a: …, b: 'default' }</code></pre>
 
-    <pre class="prettyprint"><code>BloodhoundPromise.some([  someAsyncOperation(),  BloodhoundPromise.delay(1000, 'default'),  BloodhoundPromise.reject(new Error())], 2).then(console.log); // [ ..., 'default' ]</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.some([  someAsyncOperation(),  BloodhoundPromise.delay(1000, 'default'),  BloodhoundPromise.reject(new Error())], 2).then(console.log); // [ …, 'default' ]</code></pre>
 
 
 
@@ -2561,7 +2574,7 @@ original object and the values will be the settled values.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line377">line 377</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line384">line 384</a>
     </li></ul></dd>
     
 
@@ -2617,7 +2630,7 @@ will be resolve or rejected to match.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.timeout(somePromise, 10000).catch(...);BloodhoundPromise.timeout(somePromise, 500, new Error('operation timed out'));</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.timeout(somePromise, 10000).catch(…);BloodhoundPromise.timeout(somePromise, 500, new Error('operation timed out'));</code></pre>
 
 
 
@@ -2801,7 +2814,7 @@ will be resolve or rejected to match.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line700">line 700</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line723">line 723</a>
     </li></ul></dd>
     
 
@@ -2855,7 +2868,7 @@ to wrapAsBloodhound.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>const Promise = BloodhoundPromise.unwrap();return new Promise((resolve, reject) => { ... });</code></pre>
+    <pre class="prettyprint"><code>const Promise = BloodhoundPromise.unwrap();return new Promise((resolve, reject) => { … });</code></pre>
 
 
 
@@ -2904,7 +2917,7 @@ to wrapAsBloodhound.</p>
 
     
 
-    <h4 class="name" id="catch"><span class="type-signature"></span>catch<span class="signature">(&hellip;types<span class="signature-attributes">opt</span>, onRejected)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
+    <h4 class="name" id="catch"><span class="type-signature"></span>catch<span class="signature">(&hellip;types<span class="signature-attributes">opt</span>, onRejected<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
 
     
 
@@ -2916,7 +2929,7 @@ to wrapAsBloodhound.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line901">line 901</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line927">line 927</a>
     </li></ul></dd>
     
 
@@ -3056,6 +3069,8 @@ the callback will always be invoked when the promise is rejected.</p></td>
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -3131,7 +3146,7 @@ invoked if the rejection reason matches the given Error type name.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line809">line 809</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line835">line 835</a>
     </li></ul></dd>
     
 
@@ -3188,7 +3203,7 @@ using <a href="global.html#SetErrorHandler">BloodhoundPromise.config.setErrorHan
     
     <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod)  .tap(logResult)  .then(handleResult)  .catch() // swallow  .done();</code></pre>
 
-    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod)  .then(handleResult)  .done((valueOrError) => { ... });</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod)  .then(handleResult)  .done((valueOrError) => { … });</code></pre>
 
 
 
@@ -3278,7 +3293,7 @@ when the parent promise settles.</p></td>
 
     
 
-    <h4 class="name" id="finally"><span class="type-signature"></span>finally<span class="signature">(callback)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
+    <h4 class="name" id="finally"><span class="type-signature"></span>finally<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
 
     
 
@@ -3290,7 +3305,7 @@ when the parent promise settles.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line987">line 987</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line1013">line 1013</a>
     </li></ul></dd>
     
 
@@ -3345,7 +3360,7 @@ will this promise be rejected (any resolved value will be ignored).</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>ui.showLoading(true);BloodhoundPromise.call(someMethod)  .then(...)  .finally(() => ui.showLoading(false));</code></pre>
+    <pre class="prettyprint"><code>ui.showLoading(true);BloodhoundPromise.call(someMethod)  .then(…)  .finally(() => ui.showLoading(false));</code></pre>
 
 
 
@@ -3362,6 +3377,8 @@ will this promise be rejected (any resolved value will be ignored).</p>
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -3387,6 +3404,16 @@ will this promise be rejected (any resolved value will be ignored).</p>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -3456,7 +3483,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line770">line 770</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line796">line 796</a>
     </li></ul></dd>
     
 
@@ -3570,7 +3597,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line756">line 756</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line782">line 782</a>
     </li></ul></dd>
     
 
@@ -3684,7 +3711,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line784">line 784</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line810">line 810</a>
     </li></ul></dd>
     
 
@@ -3798,7 +3825,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line798">line 798</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line824">line 824</a>
     </li></ul></dd>
     
 
@@ -3897,7 +3924,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
     
 
-    <h4 class="name" id="spread"><span class="type-signature"></span>spread<span class="signature">(callback)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
+    <h4 class="name" id="spread"><span class="type-signature"></span>spread<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
 
     
 
@@ -3909,7 +3936,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line961">line 961</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line987">line 987</a>
     </li></ul></dd>
     
 
@@ -3964,7 +3991,7 @@ argument.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.all([  'value for arg 1',  BloodhoundPromise.call(getValueForArg2),  BloodhoundPromise.resolve(getValueForArg3()),]).spread((arg1, arg2, arg3) => { ... });</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.all([  'value for arg 1',  BloodhoundPromise.call(getValueForArg2),  BloodhoundPromise.resolve(getValueForArg3()),]).spread((arg1, arg2, arg3) => { … });</code></pre>
 
 
 
@@ -3981,6 +4008,8 @@ argument.</p>
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -4006,6 +4035,16 @@ argument.</p>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -4063,7 +4102,7 @@ values passed in as arguments.</p></td>
 
     
 
-    <h4 class="name" id="tap"><span class="type-signature"></span>tap<span class="signature">(callback)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
+    <h4 class="name" id="tap"><span class="type-signature"></span>tap<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
 
     
 
@@ -4075,7 +4114,7 @@ values passed in as arguments.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line933">line 933</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line959">line 959</a>
     </li></ul></dd>
     
 
@@ -4115,10 +4154,10 @@ values passed in as arguments.</p></td>
 
 
 <div class="description">
-    <p>Invokes the specified callback only if the promise resolves. If the
-callback returns a promise, the promise chain will wait for that promise
-to settle, but neither a fulfillment nor a rejection will be propagated
-to the next promise in the chain. Instead, the original resolved value
+    <p>Used for side effects. Invokes the specified callback only if the promise
+resolves. If the callback returns a promise, the promise chain will wait
+for that promise to settle but <strong>will not</strong> propagate the settled value
+to the next promise in the chain. Instead, the <em>original</em> resolved value
 will always be propagated.</p>
 </div>
 
@@ -4132,7 +4171,7 @@ will always be propagated.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod, 'arg')  .tap(result => log.info('method succeeded', result))  .then(result => { ... });</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod, 'arg')  .tap(result => log.info('method succeeded', result))  .then(result => { … });</code></pre>
 
 
 
@@ -4149,6 +4188,8 @@ will always be propagated.</p>
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -4174,6 +4215,16 @@ will always be propagated.</p>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -4233,7 +4284,7 @@ original resolved value.</p></td>
 
     
 
-    <h4 class="name" id="then"><span class="type-signature"></span>then<span class="signature">(onFulfilled, onRejected)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
+    <h4 class="name" id="then"><span class="type-signature"></span>then<span class="signature">(onFulfilled<span class="signature-attributes">opt</span>, onRejected<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BloodhoundPromise.html">BloodhoundPromise</a>}</span></h4>
 
     
 
@@ -4245,7 +4296,7 @@ original resolved value.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line858">line 858</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line884">line 884</a>
     </li></ul></dd>
     
 
@@ -4318,6 +4369,8 @@ original resolved value.</p></td>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -4343,6 +4396,16 @@ original resolved value.</p></td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -4366,6 +4429,16 @@ Will be passed the resolved value.</p></td>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -4435,7 +4508,7 @@ Will be passed the rejection reason.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line836">line 836</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line862">line 862</a>
     </li></ul></dd>
     
 
@@ -4491,7 +4564,7 @@ rejected to match.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod, 'arg')  .timeout(10000, new Error('operation timed out'))  .then(...);  .catch(...);</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.call(someMethod, 'arg')  .timeout(10000, new Error('operation timed out'))  .then(…);  .catch(…);</code></pre>
 
 
 
@@ -4646,7 +4719,7 @@ with if the timeout period elapses.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line1014">line 1014</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line1040">line 1040</a>
     </li></ul></dd>
     
 
@@ -4762,7 +4835,7 @@ match this BloodhoundPromise.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line742">line 742</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line765">line 765</a>
     </li></ul></dd>
     
 
@@ -4815,7 +4888,7 @@ match this BloodhoundPromise.</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>BloodhoundPromise.resolve(123).value(); // 123</code></pre>
+    <pre class="prettyprint"><code>BloodhoundPromise.resolve(123).value(); // 123BloodhoundPromise.delay(10, 123).value(); // undefined (not yet settled)BloodhoundPromise.reject(new Error('oops')).value(); // &lt;Error: oops></code></pre>
 
 
 
@@ -4838,7 +4911,8 @@ match this BloodhoundPromise.</p>
 
         
 <div class="param-desc">
-    <p>The resolved value or rejection reason.</p>
+    <p>The resolved value or rejection reason. If the Promise has
+not been settled, returns <code>undefined</code>.</p>
 </div>
 
 
@@ -4879,7 +4953,7 @@ match this BloodhoundPromise.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Sep 04 2019 14:45:45 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Tue Oct 22 2019 10:46:02 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
