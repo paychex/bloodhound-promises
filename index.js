@@ -928,7 +928,9 @@ function wrapAsBloodhound(Promise) {
      * Invokes the specified callback if the promise rejects. The callback
      * will be passed the rejection reason. Optionally, you can specify which
      * Error type names the rejection reason should match for the callback
-     * to be invoked.
+     * to be invoked. If you pass no callback function, the promise rejection
+     * will be swallowed, resolving the promise with `undefined` (the same
+     * behavior you would get by passing a no-op as your rejection handler).
      *
      * @function BloodhoundPromise.prototype.catch
      * @alias BloodhoundPromise.prototype.else
@@ -942,6 +944,12 @@ function wrapAsBloodhound(Promise) {
      * @example
      * BloodhoundPromise.call(someMethod, 'arg')
      *   .catch((err) => log.error('method failed', err));
+     * @example
+     * // you can swallow the rejection by not passing a function (same behavior
+     * // as passing a no-op), resolving the final promise with undefined
+     * BloodhoundPromise.call(someMethod, 'arg')
+     *   .catch('TypeError') // swallow TypeErrors
+     *   .catch() // swallow all errors, same as .catch(() => {})
      */
     BloodhoundPromise.prototype.else =
     BloodhoundPromise.prototype.catch = function rejected() {

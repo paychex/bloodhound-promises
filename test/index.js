@@ -698,6 +698,16 @@ describe('Bloodhound', () => {
                         });
                 });
 
+                it('swallows if no callback provided', done => {
+                    const err = new TypeError();
+                    BloodhoundPromise.reject(err)
+                        .catch('TypeError')
+                        .then(value => {
+                            expect(value).toBe(undefined);
+                            done();
+                        });
+                });
+
             });
 
         });
