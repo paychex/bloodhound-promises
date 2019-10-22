@@ -1,6 +1,6 @@
 {
   "name": "bloodhound-promises",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Promises with extra features.",
   "main": "index.js",
   "keywords": [
