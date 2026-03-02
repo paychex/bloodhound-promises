@@ -88,9 +88,9 @@ import toArray from 'lodash/toArray';
 const RESOLVED = 1;
 const REJECTED = 2;
 
-const STATE = [invoke(global, 'Symbol', 'STATE'), '_state'].find(Boolean);
-const VALUE = [invoke(global, 'Symbol', '_value'), '_value'].find(Boolean);
-const SETTLED = [invoke(global, 'Symbol', 'SETTLED'), '_settled'].find(Boolean);
+const STATE = [invoke(globalThis, 'Symbol', 'STATE'), '_state'].find(Boolean);
+const VALUE = [invoke(globalThis, 'Symbol', '_value'), '_value'].find(Boolean);
+const SETTLED = [invoke(globalThis, 'Symbol', 'SETTLED'), '_settled'].find(Boolean);
 
 const readonly = value => ({
     enumerable: false,
@@ -120,10 +120,9 @@ function isErrorOrTypeName(param) {
 }
 
 function isInstanceOfTypeName(typename) {
-    const error = this;
-    return (error === Error || isError(error)) && (
-        error.name === typename ||
-        isInstanceOfTypeName.call(Object.getPrototypeOf(error.constructor), typename)
+    return (this === Error || isError(this)) && (
+        this.name === typename ||
+        isInstanceOfTypeName.call(Object.getPrototypeOf(this.constructor), typename)
     );
 }
 
@@ -189,13 +188,17 @@ function RESOLVER(promise, resolve, reject, x) {
         reject(new TypeError(`Can't resolve promise with itself.`));
     } else if (isError(x)) {
         reject(x);
-    } else if (!isObject(x)) {
-        resolve(x);
-    } else {
+    } else if (isObject(x)) {
         handlePossibleThenable(promise, resolve, reject, x);
+    } else {
+        resolve(x);
     }
 }
 
+function errorHandler(e) {
+    throw e;
+}
+        
 /**
  * Wraps a Promise implementation to enable the following behaviors:
  *
@@ -240,7 +243,7 @@ function RESOLVER(promise, resolve, reject, x) {
  * - The wrapped Promise's constructor callback will be invoked synchronously.
  *
  * @exports index
- * @param {function(new:Promise)} Promise The Promise constructor to wrap.
+ * @param {function(new:Promise)} PromiseConstructor The Promise constructor to wrap.
  * @returns {BloodhoundPromise} A BloodhoundPromise constructor that uses the wrapped
  * Promise's scheduler to implement advanced functionality.
  * @example
@@ -263,15 +266,12 @@ function RESOLVER(promise, resolve, reject, x) {
  *
  * export const BloodhoundPromise = asBloodhound(Bluebird.Promise);
  */
-function wrapAsBloodhound(Promise) {
+function wrapAsBloodhound(PromiseConstructor) {
 
-    let asyncNotifier = noop,
-        errorHandler = function throwError(e) {
-            throw e;
-        };
+    let asyncNotifier = noop;
 
     const resolver = resolve => resolve();
-    const resolved = new Promise(resolver);
+    const resolved = new PromiseConstructor(resolver);
 
     function schedule(task, resolve, reject) {
         return () => resolved.then(() =>
@@ -307,7 +307,7 @@ function wrapAsBloodhound(Promise) {
      */
     function BloodhoundPromise(callback) {
         const promise = this;
-        new Promise(function proxy(resolve, reject) {
+        new PromiseConstructor(function proxy(resolve, reject) {
             function okay(value) {
                 setInternalProperties(promise, RESOLVED, value);
                 resolve(value);
@@ -500,7 +500,7 @@ function wrapAsBloodhound(Promise) {
      *     BloodhoundPromise.delay(10000, new Error('operation timed out'))
      * ]).then(…, …);
      */
-    BloodhoundPromise.race = Promise.race;
+    BloodhoundPromise.race = PromiseConstructor.race;
 
     /**
      * Settles the returned promise with the given value after the specified time. If an
@@ -731,7 +731,7 @@ function wrapAsBloodhound(Promise) {
      * return new Promise((resolve, reject) => { … });
      */
     BloodhoundPromise.unwrap = function unwrap() {
-        return Promise;
+        return PromiseConstructor;
     };
 
     /**
@@ -759,7 +759,7 @@ function wrapAsBloodhound(Promise) {
         asyncNotifier = notifier;
     };
 
-    BloodhoundPromise.prototype = new Promise(resolver);
+    BloodhoundPromise.prototype = new PromiseConstructor(resolver);
     BloodhoundPromise.prototype.constructor = BloodhoundPromise;
 
     /**
@@ -983,13 +983,13 @@ function wrapAsBloodhound(Promise) {
      *   .then(result => { … });
      */
     BloodhoundPromise.prototype.tap = function tap(callback) {
-        return !isFunction(callback) ?
-            BloodhoundPromise.resolve(this) :
-            this.then(function swallowErrors(value) {
+        return isFunction(callback)
+            ? this.then(function swallowErrors(value) {
                 const propagate = constant(value);
                 return BloodhoundPromise.call(callback, value)
                     .then(propagate, propagate);
-            });
+            })
+            : BloodhoundPromise.resolve(this);
     };
 
     /**
@@ -1009,13 +1009,13 @@ function wrapAsBloodhound(Promise) {
      * ]).spread((arg1, arg2, arg3) => { … });
      */
     BloodhoundPromise.prototype.spread = function spread(callback) {
-        return !isFunction(callback) ?
-            BloodhoundPromise.resolve(this) :
-            this.then(function spreadValues(array) {
+        return isFunction(callback)
+            ? this.then(function spreadValues(array) {
                 return isIterable(array) ?
                     callback(...array) :
                     callback(...arguments);
-            });
+            })
+            : BloodhoundPromise.resolve(this);
     };
 
     /**
@@ -1040,9 +1040,9 @@ function wrapAsBloodhound(Promise) {
             return BloodhoundPromise.call(callback, value)
                 .then(constant(value));
         }
-        return !isFunction(callback) ?
-            BloodhoundPromise.resolve(this) :
-            this.then(propagateErrors, propagateErrors);
+        return isFunction(callback)
+            ? this.then(propagateErrors, propagateErrors)
+            : BloodhoundPromise.resolve(this);
     };
 
     /**
@@ -1058,7 +1058,7 @@ function wrapAsBloodhound(Promise) {
      *   .catch(console.error);
      */
     BloodhoundPromise.prototype.unwrap = function unwrap() {
-        return new Promise((resolve, reject) =>
+        return new PromiseConstructor((resolve, reject) =>
             this.then(resolve, reject))
     };
 
