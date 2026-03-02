@@ -112,7 +112,7 @@
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Promise with extra features.</p>
 </div>
 
@@ -270,7 +270,7 @@
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Provides methods to configure BloodhoundPromise.</p>
 </div>
 
@@ -360,7 +360,7 @@
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Resolves the returned promise only if all the specified promises resolve.</p>
 </div>
 
@@ -537,7 +537,7 @@ will be invoked with the first rejection reason.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Resolves the returned promise if any the specified promises resolve.</p>
 </div>
 
@@ -715,7 +715,7 @@ reasons.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Invokes the specified function with the given arguments. The promise will
 be rejected if an Error is thrown while invoking the function.</p>
 </div>
@@ -902,7 +902,7 @@ be rejected if an Error is thrown while invoking the function.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Invokes the specified function with the given arguments. The promise will
 be rejected if an error is thrown while invoking the function.</p>
 </div>
@@ -1109,7 +1109,7 @@ be rejected if an error is thrown while invoking the function.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Converts the specified value to a BloodhoundPromise.</p>
 </div>
 
@@ -1277,7 +1277,7 @@ the returned promise will be rejected with that reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Creates an object that references a new BloodhoundPromise as well as the
 methods to use to resolve or reject that promise later.</p>
 </div>
@@ -1392,7 +1392,7 @@ methods to use to resolve or reject that promise later.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Settles the returned promise with the given value after the specified time. If an
 Error is provided, the returned promise will be rejected. If a Promise is provided,
 the returned promise will wait for the given promise to settled and match its state.</p>
@@ -1580,7 +1580,7 @@ the returned promise will wait for the given promise to settled and match its st
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Determines if the specified object can be treated like a Promise.</p>
 </div>
 
@@ -1743,7 +1743,7 @@ the returned promise will wait for the given promise to settled and match its st
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Settles the returned promise with the first of the given promises to resolve or reject.</p>
 </div>
 
@@ -1906,7 +1906,7 @@ the returned promise will wait for the given promise to settled and match its st
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Creates a new BloodhoundPromise rejected with the given reason. Best practice is to
 always reject your Promises with an Error instance, not a string or <code>undefined</code>.</p>
 </div>
@@ -2070,7 +2070,7 @@ always reject your Promises with an Error instance, not a string or <code>undefi
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Creates a new BloodhoundPromise resolved with the given value. If an Error instance
 is provided, the returned promise will be rejected.</p>
 </div>
@@ -2234,7 +2234,7 @@ is provided, the returned promise will be rejected.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Resolves the returned promise when all the given promises settle
 (resolved <em>or</em> rejected).</p>
 </div>
@@ -2412,7 +2412,7 @@ reason or resolved value, use <a href="BloodhoundPromise.html#value">value()</a>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Resolves the returned promise when the specified number of the given
 promises has resolved. Otherwise, if not enough of the promises can
 resolve to meet the requested minimum count, the returned promise will
@@ -2613,7 +2613,7 @@ original object and the values will be the settled values.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Creates a new BloodhoundPromise that will reject with the given reason
 if the provided promise does not settle before the given time elapses. If
 the provided promise settles within the time period then the returned promise
@@ -2853,7 +2853,7 @@ will be resolve or rejected to match.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Returns the original Promise constructor function passed
 to wrapAsBloodhound.</p>
 </div>
@@ -2968,7 +2968,7 @@ to wrapAsBloodhound.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Invokes the specified callback if the promise rejects. The callback
 will be passed the rejection reason. Optionally, you can specify which
 Error type names the rejection reason should match for the callback
@@ -3189,7 +3189,7 @@ invoked if the rejection reason matches the given Error type name.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Ends the promise chain. Invokes the specified callback (if provided).
 Also, if the promise is rejected, invokes the callback registered
 using <a href="global.html#SetErrorHandler">BloodhoundPromise.config.setErrorHandler</a>.</p>
@@ -3348,7 +3348,7 @@ when the parent promise settles.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Invokes the specified callback when the promise settles. If the method
 returns a promise, we wait for that promise to settle. Only if it rejects
 will this promise be rejected (any resolved value will be ignored).</p>
@@ -3526,7 +3526,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Returns whether the promise has been rejected.</p>
 </div>
 
@@ -3640,7 +3640,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Returns whether the promise has been resolved.</p>
 </div>
 
@@ -3754,7 +3754,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Returns whether the promise has been resolved or rejected.</p>
 </div>
 
@@ -3870,7 +3870,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Does nothing. Exists for backwards-compatibility.</p>
 </div>
 
@@ -3979,7 +3979,7 @@ The method will be passed the resolved value or rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>When a promise is resolved with an array, spread will invoke the given
 success callback by passing each element in the array for each expected
 argument.</p>
@@ -4157,7 +4157,7 @@ values passed in as arguments.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Used for side effects. Invokes the specified callback only if the promise
 resolves. If the callback returns a promise, the promise chain will wait
 for that promise to settle but <strong>will not</strong> propagate the settled value
@@ -4339,7 +4339,7 @@ original resolved value.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Invokes one of the specified callbacks when the promise settles.</p>
 </div>
 
@@ -4551,7 +4551,7 @@ Will be passed the rejection reason.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Rejects the returned promise if the given promise fails to settle
 within the specified period. If the given promise settles within
 the specified period then the returned value will be resolved or
@@ -4762,7 +4762,7 @@ with if the timeout period elapses.</p></td>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Provides an instance of the original Promise implementation that matches
 the resolved or rejected state of this BloodhoundPromise.</p>
 </div>
@@ -4878,7 +4878,7 @@ match this BloodhoundPromise.</p>
 
 
 
-<div class="description">
+<div class="description usertext">
     <p>Returns the resolved value or rejection reason.</p>
 </div>
 
@@ -4957,7 +4957,7 @@ not been settled, returns <code>undefined</code>.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Tue Oct 22 2019 13:10:33 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Mon Mar 02 2026 08:48:35 GMT-0500 (Eastern Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
